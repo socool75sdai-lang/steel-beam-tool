@@ -100,6 +100,14 @@ export function LoadPanel({ inputs, onChange }: LoadPanelProps) {
         {inputs.loads.point.length === 0 && (
           <p className="text-xs text-gray-500">No point loads.</p>
         )}
+        {inputs.loads.point.length > 0 && (
+          <div className="grid grid-cols-12 gap-2 mb-1 text-xs text-gray-500 font-medium">
+            <span className="col-span-3">Magnitude (kN)</span>
+            <span className="col-span-3">Position (m)</span>
+            <span className="col-span-4">Category</span>
+            <span className="col-span-2" />
+          </div>
+        )}
         {inputs.loads.point.map((p) => {
           const posInvalid = p.position < 0 || p.position > span;
           return (
@@ -167,6 +175,15 @@ export function LoadPanel({ inputs, onChange }: LoadPanelProps) {
         </div>
         {inputs.loads.line.length === 0 && (
           <p className="text-xs text-gray-500">No line loads.</p>
+        )}
+        {inputs.loads.line.length > 0 && (
+          <div className="grid grid-cols-12 gap-2 mb-1 text-xs text-gray-500 font-medium">
+            <span className="col-span-2">Mag. (kN/m)</span>
+            <span className="col-span-2">Start (m)</span>
+            <span className="col-span-2">End (m)</span>
+            <span className="col-span-4">Category</span>
+            <span className="col-span-2" />
+          </div>
         )}
         {inputs.loads.line.map((l) => {
           const rangeInvalid =
@@ -250,6 +267,15 @@ export function LoadPanel({ inputs, onChange }: LoadPanelProps) {
         </div>
         {inputs.loads.area.length === 0 && (
           <p className="text-xs text-gray-500">No area loads.</p>
+        )}
+        {inputs.loads.area.length > 0 && (
+          <div className="grid grid-cols-12 gap-2 mb-1 text-xs text-gray-500 font-medium">
+            <span className="col-span-2">Mag. (kPa)</span>
+            <span className="col-span-2">Start (m)</span>
+            <span className="col-span-2">End (m)</span>
+            <span className="col-span-4">Category</span>
+            <span className="col-span-2" />
+          </div>
         )}
         {inputs.loads.area.map((a) => {
           const rangeInvalid =
