@@ -1,0 +1,307 @@
+import type { DesignInputs, CapacityResults, DiagramPoint } from '@/types';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
+
+export interface PdfExportArgs {
+  inputs: DesignInputs;
+  results: CapacityResults;
+  bmd: DiagramPoint[];
+  sfd: DiagramPoint[];
+  chartContainer?: HTMLElement | null;
+}
+
+function restraintSummary(r: DesignInputs['restraint']): string {
+  if (r.mode === 'simple') {
+    return `simple ${r.simpleType} (Le mult ${r.leMultiplier.toFixed(2)})`;
+  }
+  const inter =
+    r.intermediate.length > 0
+      ? `, intermediate at [${r.intermediate.map((v) => v.toFixed(2)).join(', ')}] m`
+      : '';
+  return `advanced ${r.endA}-${r.endB}${inter}`;
+}
+
+function fmtExp(value: number): string {
+  if (!Number.isFinite(value) || value === 0) return value.toString();
+  const abs = Math.abs(value);
+  if (abs >= 1e5 || abs < 1e-2) return value.toExponential(2);
+  return value.toFixed(2);
+}
+
+function safePct(num: number, denom: number): number {
+  if (!Number.isFinite(denom) || denom === 0) return 0;
+  return (num / denom) * 100;
+}
+
+function drawDiagram(
+  doc: jsPDF,
+  points: DiagramPoint[],
+  field: 'moment' | 'shear',
+  span: number,
+  originX: number,
+  originY: number,
+  width: number,
+  height: number,
+  label: string,
+): void {
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.text(label, originX, originY - 2);
+  doc.setFont('helvetica', 'normal');
+
+  // Axes
+  doc.setDrawColor(180, 180, 180);
+  doc.line(originX, originY + height / 2, originX + width, originY + height / 2);
+  doc.line(originX, originY, originX, originY + height);
+
+  if (points.length < 2 || span <= 0) return;
+
+  const values = points.map((p) => p[field]);
+  const maxAbs = Math.max(...values.map((v) => Math.abs(v)), 1e-9);
+  const xScale = width / span;
+  const yScale = (height / 2) * 0.9;
+
+  doc.setDrawColor(30, 64, 175);
+  doc.setLineWidth(0.3);
+  let prevX = originX + points[0].x * xScale;
+  let prevY = originY + height / 2 - (points[0][field] / maxAbs) * yScale;
+  for (let i = 1; i < points.length; i++) {
+    const x = originX + points[i].x * xScale;
+    const y = originY + height / 2 - (points[i][field] / maxAbs) * yScale;
+    doc.line(prevX, prevY, x, y);
+    prevX = x;
+    prevY = y;
+  }
+  doc.setLineWidth(0.2);
+  doc.setDrawColor(0, 0, 0);
+
+  // Max label
+  doc.setFontSize(8);
+  doc.text(`max |${field}| = ${maxAbs.toFixed(2)}`, originX + width - 50, originY + height + 4);
+}
+
+export async function exportToPDF(args: PdfExportArgs): Promise<void> {
+  const { inputs, results, bmd, sfd, chartContainer } = args;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+
+  // ===== Header =====
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.text('Steel Beam Design Report', 10, 15);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.text(new Date().toLocaleDateString(), 150, 15);
+
+  doc.setFontSize(11);
+  doc.text(
+    `Section: ${inputs.section.designation}    Span: ${inputs.span.toFixed(2)} m`,
+    10,
+    22,
+  );
+
+  // PASS / FAIL banner
+  const pass = results.passes.overall;
+  if (pass) {
+    doc.setFillColor(34, 197, 94);
+  } else {
+    doc.setFillColor(239, 68, 68);
+  }
+  doc.rect(165, 17, 35, 7, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text(pass ? 'PASS' : 'FAIL', 170, 22);
+  doc.setTextColor(0, 0, 0);
+  doc.setFont('helvetica', 'normal');
+
+  // ===== Inputs (left column) =====
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.text('Inputs', 10, 30);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+
+  let y = 36;
+  const lineH = 5;
+  doc.text(`Span: ${inputs.span.toFixed(2)} m`, 10, y);
+  y += lineH;
+  doc.text(`Tributary width: ${inputs.tributaryWidth.toFixed(2)} m`, 10, y);
+  y += lineH;
+  doc.text(`Restraint: ${inputs.restraint.mode}, ${restraintSummary(inputs.restraint)}`, 10, y);
+  y += lineH;
+  doc.text('Loads:', 10, y);
+  y += lineH;
+
+  const maxLoadY = 80;
+  for (const p of inputs.loads.point) {
+    if (y > maxLoadY) break;
+    doc.text(
+      `  P: ${p.magnitude.toFixed(2)} kN @ ${p.position.toFixed(2)} m (${p.category})`,
+      10,
+      y,
+    );
+    y += lineH;
+  }
+  for (const l of inputs.loads.line) {
+    if (y > maxLoadY) break;
+    doc.text(
+      `  L: ${l.magnitude.toFixed(2)} kN/m, ${l.start.toFixed(2)}-${l.end.toFixed(2)} m (${l.category})`,
+      10,
+      y,
+    );
+    y += lineH;
+  }
+  for (const a of inputs.loads.area) {
+    if (y > maxLoadY) break;
+    doc.text(
+      `  A: ${a.magnitude.toFixed(2)} kPa, ${a.start.toFixed(2)}-${a.end.toFixed(2)} m (${a.category})`,
+      10,
+      y,
+    );
+    y += lineH;
+  }
+
+  // ===== Section properties (right column) =====
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.text('Section Properties', 110, 30);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+
+  const s = inputs.section;
+  const sectLines: Array<[string, string]> = [
+    ['Designation', s.designation],
+    ['Mass', `${s.mass_kg_m.toFixed(1)} kg/m`],
+    ['d', `${s.d.toFixed(1)} mm`],
+    ['bf', `${s.bf.toFixed(1)} mm`],
+    ['tf', `${s.tf.toFixed(2)} mm`],
+    ['tw', `${s.tw.toFixed(2)} mm`],
+    ['Ix', `${fmtExp(s.Ix)} mm^4`],
+    ['Sx', `${fmtExp(s.Sx)} mm^3`],
+    ['Zx', `${fmtExp(s.Zx)} mm^3`],
+    ['Iy', `${fmtExp(s.Iy)} mm^4`],
+    ['J', `${fmtExp(s.J)} mm^4`],
+    ['Iw', `${fmtExp(s.Iw)} mm^6`],
+    ['fy', `${results.fy.toFixed(0)} MPa`],
+  ];
+
+  let yr = 36;
+  for (const [label, value] of sectLines) {
+    doc.text(label, 110, yr);
+    doc.text(value, 145, yr);
+    yr += lineH;
+  }
+
+  // ===== Capacity check table =====
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.text('Design Check Summary', 10, 85);
+
+  doc.setFontSize(9);
+  doc.text('Check', 10, 90);
+  doc.text('Demand', 70, 90);
+  doc.text('Capacity', 105, 90);
+  doc.text('Util', 140, 90);
+  doc.text('Status', 170, 90);
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.2);
+  doc.line(10, 91.5, 200, 91.5);
+
+  doc.setFont('helvetica', 'normal');
+
+  type Row = {
+    label: string;
+    demand: string;
+    capacity: string;
+    util: number;
+    pass: boolean;
+  };
+
+  const rows: Row[] = [
+    {
+      label: 'Section moment',
+      demand: `${results.Mmax.toFixed(1)} kN.m`,
+      capacity: `${results.phiMs.toFixed(1)} kN.m`,
+      util: safePct(results.Mmax, results.phiMs),
+      pass: results.passes.sectionMoment,
+    },
+    {
+      label: 'Member moment',
+      demand: `${results.Mmax.toFixed(1)} kN.m`,
+      capacity: `${results.phiMbx.toFixed(1)} kN.m`,
+      util: safePct(results.Mmax, results.phiMbx),
+      pass: results.passes.memberMoment,
+    },
+    {
+      label: 'Shear',
+      demand: `${results.Vmax.toFixed(1)} kN`,
+      capacity: `${results.phiVv.toFixed(1)} kN`,
+      util: safePct(results.Vmax, results.phiVv),
+      pass: results.passes.shear,
+    },
+    {
+      label: 'Deflection G+Q',
+      demand: `${results.deflectionGQ.toFixed(1)} mm`,
+      capacity: `${results.deflectionLimitGQ.toFixed(1)} mm`,
+      util: safePct(results.deflectionGQ, results.deflectionLimitGQ),
+      pass: results.passes.deflectionGQ,
+    },
+    {
+      label: 'Deflection G',
+      demand: `${results.deflectionG.toFixed(1)} mm`,
+      capacity: `${results.deflectionLimitG.toFixed(1)} mm`,
+      util: safePct(results.deflectionG, results.deflectionLimitG),
+      pass: results.passes.deflectionG,
+    },
+  ];
+
+  const rowYs = [96, 102, 108, 114, 120];
+  rows.forEach((row, i) => {
+    const ry = rowYs[i];
+    doc.setTextColor(0, 0, 0);
+    doc.text(row.label, 10, ry);
+    doc.text(row.demand, 70, ry);
+    doc.text(row.capacity, 105, ry);
+
+    const overUtil = row.util > 100;
+    if (overUtil) doc.setTextColor(239, 68, 68);
+    doc.text(`${row.util.toFixed(1)}%`, 140, ry);
+    doc.setTextColor(0, 0, 0);
+
+    if (row.pass) {
+      doc.setTextColor(34, 197, 94);
+      doc.text('PASS', 170, ry);
+    } else {
+      doc.setTextColor(239, 68, 68);
+      doc.text('FAIL', 170, ry);
+    }
+    doc.setTextColor(0, 0, 0);
+
+    doc.line(10, ry + 1.5, 200, ry + 1.5);
+  });
+
+  // ===== Diagrams =====
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.setTextColor(0, 0, 0);
+  doc.text('Diagrams', 10, 140);
+  doc.setFont('helvetica', 'normal');
+
+  if (chartContainer) {
+    try {
+      const canvas = await html2canvas(chartContainer, { backgroundColor: '#ffffff' });
+      const img = canvas.toDataURL('image/png');
+      doc.addImage(img, 'PNG', 10, 145, 190, 130);
+    } catch {
+      drawDiagram(doc, bmd, 'moment', inputs.span, 10, 155, 190, 55, 'Bending Moment Diagram (kN.m)');
+      drawDiagram(doc, sfd, 'shear', inputs.span, 10, 220, 190, 55, 'Shear Force Diagram (kN)');
+    }
+  } else {
+    drawDiagram(doc, bmd, 'moment', inputs.span, 10, 155, 190, 55, 'Bending Moment Diagram (kN.m)');
+    drawDiagram(doc, sfd, 'shear', inputs.span, 10, 220, 190, 55, 'Shear Force Diagram (kN)');
+  }
+
+  // ===== Save =====
+  doc.save(`steel-beam-design-${new Date().toISOString().slice(0, 10)}.pdf`);
+}

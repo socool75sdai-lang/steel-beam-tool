@@ -1,0 +1,14 @@
+The task is to create a web based design tool that provides a structural engineer a way to design simple steel members such as beams, columns, braces, etc
+
+The designer needs to have a four sections
+
+the first is a geometry panel where the engineer will enter the element span or height along with the elements design tributary width. these measurements will be in metric form. The element will be able to be selected from typical standard Australian grade 300 sections such as UB, UC, PFC, EA, SHS, CHS, RHS.
+
+The second is a load panel where the engineer will enter the elements applied loading in the form of point loads, line loads and area loads. These loads will be in metric form.
+
+The third is information on the elements restraint condition. i.e effective length or flange restraint locations.
+
+The forth is the results page which will provide a design outcome.
+The design will need to be in accordance with all relevant Australian standards such as AS1170 and AS4100.
+
+The design will also need to check for the elements deflection from dead + live load combination and dead load (including self weight) only. Both results are to be within acceptable limits to be in accordance with the steel design handbook or other relevant guidelines.
