@@ -1,3 +1,4 @@
+import React from 'react';
 import type { DesignInputs, SectionType } from '@/types';
 import { getSectionsByType, getAllSectionTypes } from '@/engineering/sections/sectionUtils';
 import { autoSelectSection } from '@/engineering/sections/autoSelect';
@@ -10,8 +11,10 @@ interface GeometryPanelProps {
 export function GeometryPanel({ inputs, onChange }: GeometryPanelProps) {
   const sectionTypes = getAllSectionTypes();
   const sectionsForType = getSectionsByType(inputs.section.type);
+  const [autoSelectMsg, setAutoSelectMsg] = React.useState<{ text: string; ok: boolean } | null>(null);
 
   const handleTypeChange = (newType: SectionType) => {
+    setAutoSelectMsg(null);
     const newSections = getSectionsByType(newType);
     if (newSections.length > 0) {
       onChange({ section: newSections[0] });
@@ -27,11 +30,16 @@ export function GeometryPanel({ inputs, onChange }: GeometryPanelProps) {
 
   const handleAutoSelect = () => {
     const result = autoSelectSection(inputs, inputs.section.type);
-    if (result) {
-      onChange({ section: result.section });
-    } else {
-      alert('No passing section found in ' + inputs.section.type);
+    if (!result) {
+      setAutoSelectMsg({ text: `No passing section found in ${inputs.section.type} — try reducing loads or changing section type.`, ok: false });
+      return;
     }
+    if (result.section.designation === inputs.section.designation) {
+      setAutoSelectMsg({ text: `${inputs.section.designation} is already the lightest passing ${inputs.section.type}.`, ok: true });
+      return;
+    }
+    onChange({ section: result.section });
+    setAutoSelectMsg({ text: `Selected ${result.section.designation} — lightest passing ${inputs.section.type}.`, ok: true });
   };
 
   return (
@@ -111,6 +119,11 @@ export function GeometryPanel({ inputs, onChange }: GeometryPanelProps) {
       >
         Auto-select lightest
       </button>
+      {autoSelectMsg && (
+        <p className={`mt-2 text-xs ${autoSelectMsg.ok ? 'text-green-700' : 'text-red-600'}`}>
+          {autoSelectMsg.text}
+        </p>
+      )}
     </section>
   );
 }
