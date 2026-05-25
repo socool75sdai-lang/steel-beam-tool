@@ -35,8 +35,8 @@ function utilCell(util: number) {
 export function ResultsPanel({ inputs, results, diagrams, onDeflLimitsChange }: ResultsPanelProps) {
   if (!results || !diagrams) {
     return (
-      <section className="p-4">
-        <h2 className="text-xl font-bold mb-3">Design Results</h2>
+      <section className="p-4 mc-panel">
+        <h2 className="text-xl font-bold mb-3 mc-heading">Design Results</h2>
         <div className="p-4 bg-white border rounded shadow-sm">
           <p className="text-gray-600">Enter valid inputs to see results.</p>
         </div>
@@ -75,8 +75,8 @@ export function ResultsPanel({ inputs, results, diagrams, onDeflLimitsChange }: 
   };
 
   return (
-    <section className="p-4">
-      <h2 className="text-xl font-bold mb-3">Design Results</h2>
+    <section className="p-4 mc-panel">
+      <h2 className="text-xl font-bold mb-3 mc-heading">Design Results</h2>
 
       <div
         className={`p-4 rounded mb-4 text-white text-2xl font-bold text-center
@@ -87,7 +87,7 @@ export function ResultsPanel({ inputs, results, diagrams, onDeflLimitsChange }: 
 
       <table className="w-full border-collapse mb-4 text-sm">
         <thead>
-          <tr className="bg-gray-100">
+          <tr className="bg-gray-100 mc-table-header">
             <th className="text-left p-2 border">Check</th>
             <th className="text-right p-2 border">Demand</th>
             <th className="text-right p-2 border">Capacity</th>
@@ -291,7 +291,7 @@ export function ResultsPanel({ inputs, results, diagrams, onDeflLimitsChange }: 
 
       <button
         onClick={handleExport}
-        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded mc-btn-primary"
       >
         Export PDF Report
       </button>

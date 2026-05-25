@@ -83,8 +83,8 @@ export function LoadPanel({ inputs, onChange }: LoadPanelProps) {
     `flex-1 text-sm rounded px-2 py-1 border ${active ? 'bg-blue-500 text-white' : 'bg-white'}`;
 
   return (
-    <section className="border rounded p-4 mb-4 bg-white shadow-sm">
-      <h2 className="text-lg font-semibold mb-3">2. Loads</h2>
+    <section className="border rounded p-4 mb-4 bg-white shadow-sm mc-panel">
+      <h2 className="text-lg font-semibold mb-3 mc-heading">2. Loads</h2>
 
       {/* Point Loads */}
       <div className="mb-4">
@@ -92,7 +92,7 @@ export function LoadPanel({ inputs, onChange }: LoadPanelProps) {
           <h3 className="font-medium">Point Loads (kN)</h3>
           <button
             onClick={addPoint}
-            className="bg-blue-500 text-white text-sm rounded px-3 py-1"
+            className="bg-blue-500 text-white text-sm rounded px-3 py-1 mc-btn-primary"
           >
             + Add
           </button>
@@ -168,7 +168,7 @@ export function LoadPanel({ inputs, onChange }: LoadPanelProps) {
           <h3 className="font-medium">Line Loads / UDL (kN/m)</h3>
           <button
             onClick={addLine}
-            className="bg-blue-500 text-white text-sm rounded px-3 py-1"
+            className="bg-blue-500 text-white text-sm rounded px-3 py-1 mc-btn-primary"
           >
             + Add
           </button>
@@ -260,7 +260,7 @@ export function LoadPanel({ inputs, onChange }: LoadPanelProps) {
           <h3 className="font-medium">Area Loads (kPa)</h3>
           <button
             onClick={addArea}
-            className="bg-blue-500 text-white text-sm rounded px-3 py-1"
+            className="bg-blue-500 text-white text-sm rounded px-3 py-1 mc-btn-primary"
           >
             + Add
           </button>

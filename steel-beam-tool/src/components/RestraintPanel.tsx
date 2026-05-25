@@ -37,8 +37,8 @@ export function RestraintPanel({ inputs, onChange }: RestraintPanelProps) {
     updateRestraint({ intermediate: r.intermediate.filter((_, idx) => idx !== i) });
 
   return (
-    <section className="border rounded p-4 mb-4 bg-white shadow-sm">
-      <h2 className="text-lg font-semibold mb-3">3. Restraints</h2>
+    <section className="border rounded p-4 mb-4 bg-white shadow-sm mc-panel">
+      <h2 className="text-lg font-semibold mb-3 mc-heading">3. Restraints</h2>
 
       <div className="flex gap-2 mb-3">
         {(['simple', 'advanced'] as RestraintMode[]).map((mode) => (
@@ -98,7 +98,7 @@ export function RestraintPanel({ inputs, onChange }: RestraintPanelProps) {
                 onChange={(e) =>
                   updateRestraint({ endA: e.target.value as EndRestraint })
                 }
-                className="w-full mt-1 border rounded px-2 py-1"
+                className="w-full mt-1 border rounded px-2 py-1 mc-select"
               >
                 {endOptions.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -114,7 +114,7 @@ export function RestraintPanel({ inputs, onChange }: RestraintPanelProps) {
                 onChange={(e) =>
                   updateRestraint({ endB: e.target.value as EndRestraint })
                 }
-                className="w-full mt-1 border rounded px-2 py-1"
+                className="w-full mt-1 border rounded px-2 py-1 mc-select"
               >
                 {endOptions.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -132,7 +132,7 @@ export function RestraintPanel({ inputs, onChange }: RestraintPanelProps) {
               </h3>
               <button
                 onClick={addIntermediate}
-                className="bg-blue-500 text-white text-sm rounded px-3 py-1"
+                className="bg-blue-500 text-white text-sm rounded px-3 py-1 mc-btn-primary"
               >
                 + Add
               </button>

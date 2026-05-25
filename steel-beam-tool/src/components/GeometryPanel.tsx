@@ -43,11 +43,11 @@ export function GeometryPanel({ inputs, onChange }: GeometryPanelProps) {
   };
 
   return (
-    <section className="border rounded p-4 mb-4 bg-white shadow-sm">
-      <h2 className="text-lg font-semibold mb-3">1. Geometry</h2>
+    <section className="border rounded p-4 mb-4 bg-white shadow-sm mc-panel">
+      <h2 className="text-lg font-semibold mb-3 mc-heading">1. Geometry</h2>
 
       <div className="grid grid-cols-2 gap-3">
-        <label className="text-sm font-medium block">
+        <label className="text-sm font-medium block mc-label">
           Span (m)
           <input
             type="number"
@@ -62,7 +62,7 @@ export function GeometryPanel({ inputs, onChange }: GeometryPanelProps) {
           )}
         </label>
 
-        <label className="text-sm font-medium block">
+        <label className="text-sm font-medium block mc-label">
           Tributary width (m)
           <input
             type="number"
@@ -81,12 +81,12 @@ export function GeometryPanel({ inputs, onChange }: GeometryPanelProps) {
       </div>
 
       <div className="grid grid-cols-2 gap-3 mt-3">
-        <label className="text-sm font-medium block">
+        <label className="text-sm font-medium block mc-label">
           Section type
           <select
             value={inputs.section.type}
             onChange={(e) => handleTypeChange(e.target.value as SectionType)}
-            className="mt-1 w-full border border-gray-300 rounded px-2 py-1"
+            className="mt-1 w-full border border-gray-300 rounded px-2 py-1 mc-select"
           >
             {sectionTypes.map((t) => (
               <option key={t} value={t}>
@@ -96,12 +96,12 @@ export function GeometryPanel({ inputs, onChange }: GeometryPanelProps) {
           </select>
         </label>
 
-        <label className="text-sm font-medium block">
+        <label className="text-sm font-medium block mc-label">
           Section size
           <select
             value={inputs.section.designation}
             onChange={(e) => handleSizeChange(e.target.value)}
-            className="mt-1 w-full border border-gray-300 rounded px-2 py-1"
+            className="mt-1 w-full border border-gray-300 rounded px-2 py-1 mc-select"
           >
             {sectionsForType.map((s) => (
               <option key={s.designation} value={s.designation}>
@@ -115,7 +115,7 @@ export function GeometryPanel({ inputs, onChange }: GeometryPanelProps) {
       <button
         type="button"
         onClick={handleAutoSelect}
-        className="mt-3 bg-blue-500 hover:bg-blue-600 text-white rounded px-3 py-1"
+        className="mt-3 bg-blue-500 hover:bg-blue-600 text-white rounded px-3 py-1 mc-btn-primary"
       >
         Auto-select lightest
       </button>

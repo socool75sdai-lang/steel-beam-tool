@@ -11,3 +11,53 @@ body {
   color: #1f2937;
   background: #f3f4f6;
 }
+
+:root {
+  --mc-green-dark: #243C30;
+  --mc-green-mid:  #2D4A3A;
+  --mc-gold:       #C4A962;
+  --mc-gold-light: #D4BE82;
+  --mc-cream:      #F5F0E8;
+}
+
+/* McVeigh theme overrides — only active under [data-theme="mcveigh"].
+   These rules are unlayered, so they take precedence over Tailwind's
+   layered utilities (bg-white, border-gray-*, etc.). */
+[data-theme="mcveigh"] body {
+  background-color: var(--mc-green-dark);
+  color: var(--mc-cream);
+}
+
+[data-theme="mcveigh"] .mc-panel {
+  background-color: var(--mc-green-mid);
+  border-color: var(--mc-green-dark);
+  color: var(--mc-cream);
+}
+
+[data-theme="mcveigh"] .mc-heading {
+  color: var(--mc-gold);
+}
+
+[data-theme="mcveigh"] .mc-label {
+  color: var(--mc-gold-light);
+}
+
+[data-theme="mcveigh"] .mc-btn-primary {
+  background-color: var(--mc-gold);
+  color: var(--mc-green-dark);
+}
+
+[data-theme="mcveigh"] .mc-btn-primary:hover {
+  background-color: var(--mc-gold-light);
+}
+
+[data-theme="mcveigh"] .mc-table-header {
+  background-color: var(--mc-green-dark);
+  color: var(--mc-gold);
+}
+
+[data-theme="mcveigh"] .mc-select {
+  background-color: #ffffff;
+  border-color: var(--mc-gold);
+  color: #111;
+}

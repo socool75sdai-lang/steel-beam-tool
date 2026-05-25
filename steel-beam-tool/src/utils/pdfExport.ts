@@ -158,19 +158,29 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
   const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
 
   // ===== Header =====
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
-  doc.text('Steel Beam Design Report', 10, 15);
+  // McVeigh branded header bar (occupies 0–20mm)
+  doc.setFillColor(36, 60, 48); // --mc-green-dark
+  doc.rect(0, 0, 210, 20, 'F');
 
-  doc.setFont('helvetica', 'normal');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.setTextColor(196, 169, 98); // --mc-gold
+  doc.text('McVeigh Consultants', 10, 12);
+
   doc.setFontSize(10);
-  doc.text(new Date().toLocaleDateString(), 150, 15);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(245, 240, 232); // --mc-cream
+  doc.text('Steel Beam Design Report', 10, 18);
+
+  doc.setFontSize(9);
+  doc.text(new Date().toLocaleDateString(), 170, 12);
+  doc.setTextColor(0, 0, 0);
 
   doc.setFontSize(11);
   doc.text(
     `Section: ${inputs.section.designation}    Span: ${inputs.span.toFixed(2)} m`,
     10,
-    22,
+    27,
   );
 
   // PASS / FAIL banner
@@ -180,22 +190,22 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
   } else {
     doc.setFillColor(239, 68, 68);
   }
-  doc.rect(165, 17, 35, 7, 'F');
+  doc.rect(165, 22, 35, 7, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
-  doc.text(pass ? 'PASS' : 'FAIL', 170, 22);
+  doc.text(pass ? 'PASS' : 'FAIL', 170, 27);
   doc.setTextColor(0, 0, 0);
   doc.setFont('helvetica', 'normal');
 
   // ===== Inputs (left column) =====
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
-  doc.text('Inputs', 10, 30);
+  doc.text('Inputs', 10, 35);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
 
-  let y = 36;
+  let y = 41;
   const lineH = 5;
   doc.text(`Span: ${inputs.span.toFixed(2)} m`, 10, y);
   y += lineH;
@@ -206,7 +216,7 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
   doc.text('Loads:', 10, y);
   y += lineH;
 
-  const maxLoadY = 80;
+  const maxLoadY = 85;
   for (const p of inputs.loads.point) {
     if (y > maxLoadY) break;
     doc.text(
@@ -238,7 +248,7 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
   // ===== Section properties (right column) =====
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
-  doc.text('Section Properties', 110, 30);
+  doc.text('Section Properties', 110, 35);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
 
@@ -259,7 +269,7 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
     ['fy', `${results.fy.toFixed(0)} MPa`],
   ];
 
-  let yr = 36;
+  let yr = 41;
   for (const [label, value] of sectLines) {
     doc.text(label, 110, yr);
     doc.text(value, 145, yr);
@@ -269,17 +279,17 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
   // ===== Capacity check table =====
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
-  doc.text('Design Check Summary', 10, 85);
+  doc.text('Design Check Summary', 10, 90);
 
   doc.setFontSize(9);
-  doc.text('Check', 10, 90);
-  doc.text('Demand', 70, 90);
-  doc.text('Capacity', 105, 90);
-  doc.text('Util', 140, 90);
-  doc.text('Status', 170, 90);
+  doc.text('Check', 10, 95);
+  doc.text('Demand', 70, 95);
+  doc.text('Capacity', 105, 95);
+  doc.text('Util', 140, 95);
+  doc.text('Status', 170, 95);
   doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.2);
-  doc.line(10, 91.5, 200, 91.5);
+  doc.line(10, 96.5, 200, 96.5);
 
   doc.setFont('helvetica', 'normal');
 
@@ -329,7 +339,7 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
     },
   ];
 
-  const rowYs = [96, 102, 108, 114, 120];
+  const rowYs = [101, 107, 113, 119, 125];
   rows.forEach((row, i) => {
     const ry = rowYs[i];
     doc.setTextColor(0, 0, 0);
@@ -358,11 +368,11 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.setTextColor(0, 0, 0);
-  doc.text('Diagrams', 10, 135);
+  doc.text('Diagrams', 10, 140);
   doc.setFont('helvetica', 'normal');
 
-  drawDiagram(doc, bmd, 'moment', inputs.span, 10, 143, 190, 40, 'Bending Moment Diagram (kN.m)');
-  drawDiagram(doc, sfd, 'shear', inputs.span, 10, 192, 190, 40, 'Shear Force Diagram (kN)');
+  drawDiagram(doc, bmd, 'moment', inputs.span, 10, 148, 190, 40, 'Bending Moment Diagram (kN.m)');
+  drawDiagram(doc, sfd, 'shear', inputs.span, 10, 197, 190, 40, 'Shear Force Diagram (kN)');
   drawDeflectionDiagram(
     doc,
     deflectionGQ,
@@ -373,7 +383,7 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
     results.passes.deflectionG,
     inputs.span,
     10,
-    241,
+    246,
     190,
     40,
     'Deflection Profile (mm)',
