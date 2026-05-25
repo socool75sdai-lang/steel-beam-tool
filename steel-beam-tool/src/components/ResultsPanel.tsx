@@ -190,6 +190,19 @@ export function ResultsPanel({ inputs, results, diagrams, onDeflLimitsChange }: 
               <Tooltip />
               <Legend />
               <ReferenceLine y={0} stroke="#000" />
+              <ReferenceLine
+                y={results.phiMbx}
+                stroke={results.passes.memberMoment ? '#16a34a' : '#dc2626'}
+                strokeWidth={1.5}
+                label={{ value: 'φMbx', position: 'insideTopRight', fontSize: 10 }}
+              />
+              <ReferenceLine
+                y={results.phiMs}
+                stroke={results.passes.sectionMoment ? '#16a34a' : '#dc2626'}
+                strokeDasharray="4 2"
+                strokeWidth={1}
+                label={{ value: 'φMs', position: 'insideBottomRight', fontSize: 10 }}
+              />
               <Line
                 type="monotone"
                 dataKey="factoredM"
@@ -214,6 +227,18 @@ export function ResultsPanel({ inputs, results, diagrams, onDeflLimitsChange }: 
               <Tooltip />
               <Legend />
               <ReferenceLine y={0} stroke="#000" />
+              <ReferenceLine
+                y={results.phiVv}
+                stroke={results.passes.shear ? '#16a34a' : '#dc2626'}
+                strokeWidth={1.5}
+                label={{ value: 'φVv', position: 'insideTopRight', fontSize: 10 }}
+              />
+              <ReferenceLine
+                y={-results.phiVv}
+                stroke={results.passes.shear ? '#16a34a' : '#dc2626'}
+                strokeWidth={1.5}
+                label={{ value: '-φVv', position: 'insideBottomRight', fontSize: 10 }}
+              />
               <Line
                 type="monotone"
                 dataKey="factoredV"
