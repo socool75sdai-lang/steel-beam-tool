@@ -82,6 +82,11 @@ export interface DiagramPoint {
   shear: number;
 }
 
+export interface DeflectionProfilePoint {
+  x: number; // m from left support
+  delta: number; // mm, positive = downward
+}
+
 export interface CapacityResults {
   Mmax: number;
   Vmax: number;
@@ -112,6 +117,8 @@ export interface DiagramSet {
   factored: DiagramPoint[];
   serviceability: DiagramPoint[];
   dead: DiagramPoint[];
+  deflectionGQ: DeflectionProfilePoint[];
+  deflectionG: DeflectionProfilePoint[];
 }
 
 export interface ValidationError {

@@ -6,7 +6,7 @@ import {
   calcMemberCapacity,
 } from '@/engineering/as4100/momentCapacity';
 import { calcShearCapacity } from '@/engineering/as4100/shearCapacity';
-import { calcDeflection } from '@/engineering/as4100/deflection';
+import { calcDeflection, calcDeflectionProfile } from '@/engineering/as4100/deflection';
 import {
   calcEffectiveLength,
   calcAlphaM,
@@ -74,6 +74,8 @@ export function evaluateDesign(inputs: DesignInputs): EvaluationResult {
     factored: factored.bmd,
     serviceability: servic.bmd,
     dead: dead.bmd,
+    deflectionGQ: calcDeflectionProfile(inputs, 'G+Q'),
+    deflectionG: calcDeflectionProfile(inputs, 'G'),
   };
 
   return { results, diagrams };

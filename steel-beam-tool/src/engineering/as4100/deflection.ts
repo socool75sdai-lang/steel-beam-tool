@@ -1,4 +1,4 @@
-import type { DesignInputs } from '@/types';
+import type { DesignInputs, DeflectionProfilePoint } from '@/types';
 import { calcSelfWeightKnPerM } from '@/engineering/sections/sectionUtils';
 
 export interface DeflectionResult {
@@ -148,4 +148,59 @@ export function calcDeflection(
     max: Math.abs(maxAbs),
     position: maxX / 1000,
   };
+}
+
+/**
+ * Full elastic deflection profile (81 points) of a simply-supported beam by
+ * load superposition. Same load assembly and unit conventions as calcDeflection;
+ * returns the per-station deflection rather than just the max/midspan.
+ */
+export function calcDeflectionProfile(
+  inputs: DesignInputs,
+  combo: 'G+Q' | 'G',
+): DeflectionProfilePoint[] {
+  const E = 200_000; // MPa = N/mm²
+  const EI = E * inputs.section.Ix; // N·mm²
+  const L = inputs.span * 1000; // mm
+
+  const gFactor = 1.0;
+  const qFactor = combo === 'G+Q' ? 1.0 : 0.0;
+
+  const pointLoads: CalcPointLoad[] = [];
+  const lineLoads: CalcLineLoad[] = [];
+
+  for (const pl of inputs.loads.point) {
+    const f = pl.category === 'G' ? gFactor : qFactor;
+    if (f === 0) continue;
+    pointLoads.push({ P: pl.magnitude * 1000 * f, a: pl.position * 1000 });
+  }
+
+  for (const ll of inputs.loads.line) {
+    const f = ll.category === 'G' ? gFactor : qFactor;
+    if (f === 0) continue;
+    lineLoads.push({ w: ll.magnitude * f, a: ll.start * 1000, b: ll.end * 1000 });
+  }
+
+  for (const al of inputs.loads.area) {
+    const f = al.category === 'G' ? gFactor : qFactor;
+    if (f === 0) continue;
+    const wKnPerM = al.magnitude * inputs.tributaryWidth;
+    lineLoads.push({ w: wKnPerM * f, a: al.start * 1000, b: al.end * 1000 });
+  }
+
+  const swKnPerM = calcSelfWeightKnPerM(inputs.section);
+  if (swKnPerM > 0) {
+    lineLoads.push({ w: swKnPerM * gFactor, a: 0, b: L });
+  }
+
+  const samples = 81;
+  const profile: DeflectionProfilePoint[] = [];
+  for (let i = 0; i < samples; i++) {
+    const x = (L * i) / (samples - 1);
+    let delta = 0;
+    for (const p of pointLoads) delta += deflectionPointLoad(p.P, p.a, L, EI, x);
+    for (const w of lineLoads) delta += deflectionPartialUDL(w.w, w.a, w.b, L, EI, x);
+    profile.push({ x: x / 1000, delta });
+  }
+  return profile;
 }

@@ -1,4 +1,3 @@
-import { useRef } from 'react';
 import {
   LineChart,
   Line,
@@ -34,8 +33,6 @@ function utilCell(util: number) {
 }
 
 export function ResultsPanel({ inputs, results, diagrams, onDeflLimitsChange }: ResultsPanelProps) {
-  const chartContainerRef = useRef<HTMLDivElement>(null);
-
   if (!results || !diagrams) {
     return (
       <section className="p-4">
@@ -55,6 +52,12 @@ export function ResultsPanel({ inputs, results, diagrams, onDeflLimitsChange }: 
     servicV: diagrams.serviceability[i]?.shear ?? 0,
   }));
 
+  const deflData = diagrams.deflectionGQ.map((pt, i) => ({
+    x: pt.x,
+    deltaGQ: pt.delta,
+    deltaG: diagrams.deflectionG[i]?.delta ?? 0,
+  }));
+
   const handleExport = async () => {
     try {
       await exportToPDF({
@@ -62,7 +65,8 @@ export function ResultsPanel({ inputs, results, diagrams, onDeflLimitsChange }: 
         results,
         bmd: diagrams.factored,
         sfd: diagrams.factored,
-        chartContainer: chartContainerRef.current,
+        deflectionGQ: diagrams.deflectionGQ,
+        deflectionG: diagrams.deflectionG,
       });
     } catch (err) {
       console.error('PDF export failed:', err);
@@ -173,7 +177,7 @@ export function ResultsPanel({ inputs, results, diagrams, onDeflLimitsChange }: 
         </label>
       </div>
 
-      <div ref={chartContainerRef} className="space-y-4 mb-4 bg-white p-3 border rounded">
+      <div className="space-y-4 mb-4 bg-white p-3 border rounded">
         <div>
           <h3 className="text-sm font-semibold mb-1">Bending Moment Diagram (kN·m)</h3>
           <ResponsiveContainer width="100%" height={220}>
@@ -247,6 +251,39 @@ export function ResultsPanel({ inputs, results, diagrams, onDeflLimitsChange }: 
                 dot={false}
               />
               <Line type="monotone" dataKey="servicV" stroke="#2563eb" name="G+Q" dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+        <div>
+          <h3 className="text-sm font-semibold mb-1">Deflection Profile (mm)</h3>
+          <ResponsiveContainer width="100%" height={220}>
+            <LineChart data={deflData} margin={{ top: 5, right: 20, left: 0, bottom: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis
+                dataKey="x"
+                label={{ value: 'x (m)', position: 'insideBottom', offset: -5 }}
+              />
+              <YAxis
+                reversed
+                label={{ value: 'δ (mm)', angle: -90, position: 'insideLeft' }}
+              />
+              <Tooltip />
+              <Legend />
+              <ReferenceLine y={0} stroke="#000" />
+              <ReferenceLine
+                y={results.deflectionLimitGQ}
+                stroke={results.passes.deflectionGQ ? '#16a34a' : '#dc2626'}
+                strokeDasharray="4 2"
+                label={{ value: `L/${inputs.deflLimits.GQ}`, position: 'insideTopRight', fontSize: 10 }}
+              />
+              <ReferenceLine
+                y={results.deflectionLimitG}
+                stroke={results.passes.deflectionG ? '#16a34a' : '#dc2626'}
+                strokeDasharray="2 4"
+                label={{ value: `L/${inputs.deflLimits.G}`, position: 'insideBottomRight', fontSize: 10 }}
+              />
+              <Line type="monotone" dataKey="deltaGQ" stroke="#2563eb" name="G+Q" dot={false} />
+              <Line type="monotone" dataKey="deltaG" stroke="#9ca3af" name="G" strokeDasharray="4 2" dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>

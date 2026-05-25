@@ -1,13 +1,13 @@
-import type { DesignInputs, CapacityResults, DiagramPoint } from '@/types';
+import type { DesignInputs, CapacityResults, DiagramPoint, DeflectionProfilePoint } from '@/types';
 import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
 
 export interface PdfExportArgs {
   inputs: DesignInputs;
   results: CapacityResults;
   bmd: DiagramPoint[];
   sfd: DiagramPoint[];
-  chartContainer?: HTMLElement | null;
+  deflectionGQ: DeflectionProfilePoint[];
+  deflectionG: DeflectionProfilePoint[];
 }
 
 function restraintSummary(r: DesignInputs['restraint']): string {
@@ -80,8 +80,81 @@ function drawDiagram(
   doc.text(`max |${field}| = ${maxAbs.toFixed(2)}`, originX + width - 50, originY + height + 4);
 }
 
+function drawDeflectionDiagram(
+  doc: jsPDF,
+  gqPoints: DeflectionProfilePoint[],
+  gPoints: DeflectionProfilePoint[],
+  limitGQ: number,
+  limitG: number,
+  passGQ: boolean,
+  passG: boolean,
+  span: number,
+  originX: number,
+  originY: number,
+  width: number,
+  height: number,
+  label: string,
+): void {
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.text(label, originX, originY - 2);
+  doc.setFont('helvetica', 'normal');
+
+  // Axes — baseline at top (zero deflection); positive deflection plotted downward
+  doc.setDrawColor(180, 180, 180);
+  doc.line(originX, originY, originX + width, originY);
+  doc.line(originX, originY, originX, originY + height);
+
+  if (gqPoints.length < 2 || span <= 0) return;
+
+  const allDeltas = [...gqPoints.map((p) => p.delta), ...gPoints.map((p) => p.delta), limitGQ, limitG];
+  const maxDelta = Math.max(...allDeltas.map((v) => Math.abs(v)), 1e-9);
+  const xScale = width / span;
+  const yScale = (height * 0.85) / maxDelta;
+
+  // G+Q line (blue)
+  doc.setDrawColor(37, 99, 235);
+  doc.setLineWidth(0.3);
+  for (let i = 1; i < gqPoints.length; i++) {
+    doc.line(
+      originX + gqPoints[i - 1].x * xScale,
+      originY + gqPoints[i - 1].delta * yScale,
+      originX + gqPoints[i].x * xScale,
+      originY + gqPoints[i].delta * yScale,
+    );
+  }
+
+  // G line (grey, dashed-approximation via alternate segments)
+  doc.setDrawColor(150, 150, 150);
+  for (let i = 1; i < gPoints.length; i += 2) {
+    doc.line(
+      originX + gPoints[i - 1].x * xScale,
+      originY + gPoints[i - 1].delta * yScale,
+      originX + gPoints[i].x * xScale,
+      originY + gPoints[i].delta * yScale,
+    );
+  }
+
+  // Limit lines (green pass / red fail)
+  const gqColor: [number, number, number] = passGQ ? [22, 163, 74] : [220, 38, 38];
+  const gColor: [number, number, number] = passG ? [22, 163, 74] : [220, 38, 38];
+  doc.setLineWidth(0.2);
+  doc.setDrawColor(gqColor[0], gqColor[1], gqColor[2]);
+  doc.line(originX, originY + limitGQ * yScale, originX + width, originY + limitGQ * yScale);
+  doc.setFontSize(8);
+  doc.text(`L/${Math.round(span / (limitGQ / 1000))}`, originX + width + 1, originY + limitGQ * yScale + 1, {
+    maxWidth: 15,
+  });
+
+  doc.setDrawColor(gColor[0], gColor[1], gColor[2]);
+  doc.line(originX, originY + limitG * yScale, originX + width, originY + limitG * yScale);
+
+  doc.setLineWidth(0.2);
+  doc.setDrawColor(0, 0, 0);
+}
+
 export async function exportToPDF(args: PdfExportArgs): Promise<void> {
-  const { inputs, results, bmd, sfd, chartContainer } = args;
+  const { inputs, results, bmd, sfd, deflectionGQ, deflectionG } = args;
   const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
 
   // ===== Header =====
@@ -285,22 +358,26 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.setTextColor(0, 0, 0);
-  doc.text('Diagrams', 10, 140);
+  doc.text('Diagrams', 10, 135);
   doc.setFont('helvetica', 'normal');
 
-  if (chartContainer) {
-    try {
-      const canvas = await html2canvas(chartContainer, { backgroundColor: '#ffffff' });
-      const img = canvas.toDataURL('image/png');
-      doc.addImage(img, 'PNG', 10, 145, 190, 130);
-    } catch {
-      drawDiagram(doc, bmd, 'moment', inputs.span, 10, 155, 190, 55, 'Bending Moment Diagram (kN.m)');
-      drawDiagram(doc, sfd, 'shear', inputs.span, 10, 220, 190, 55, 'Shear Force Diagram (kN)');
-    }
-  } else {
-    drawDiagram(doc, bmd, 'moment', inputs.span, 10, 155, 190, 55, 'Bending Moment Diagram (kN.m)');
-    drawDiagram(doc, sfd, 'shear', inputs.span, 10, 220, 190, 55, 'Shear Force Diagram (kN)');
-  }
+  drawDiagram(doc, bmd, 'moment', inputs.span, 10, 143, 190, 40, 'Bending Moment Diagram (kN.m)');
+  drawDiagram(doc, sfd, 'shear', inputs.span, 10, 192, 190, 40, 'Shear Force Diagram (kN)');
+  drawDeflectionDiagram(
+    doc,
+    deflectionGQ,
+    deflectionG,
+    results.deflectionLimitGQ,
+    results.deflectionLimitG,
+    results.passes.deflectionGQ,
+    results.passes.deflectionG,
+    inputs.span,
+    10,
+    241,
+    190,
+    40,
+    'Deflection Profile (mm)',
+  );
 
   // ===== Save =====
   doc.save(`steel-beam-design-${new Date().toISOString().slice(0, 10)}.pdf`);
