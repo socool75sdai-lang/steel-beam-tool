@@ -18,7 +18,7 @@ export function getDefaultSection(): SteelSection {
 }
 
 export function getAllSectionTypes(): SectionType[] {
-  return ['UB', 'UC', 'PFC', 'EA', 'SHS', 'CHS', 'RHS'];
+  return ['UB', 'UC', 'PFC', 'EA', 'SHS', 'CHS', 'RHS', 'WB'];
 }
 
 export function calcSelfWeightKnPerM(section: SteelSection): number {

@@ -1,4 +1,4 @@
-export type SectionType = 'UB' | 'UC' | 'PFC' | 'EA' | 'SHS' | 'CHS' | 'RHS';
+export type SectionType = 'UB' | 'UC' | 'PFC' | 'EA' | 'SHS' | 'CHS' | 'RHS' | 'WB';
 export type LoadCategory = 'G' | 'Q';
 export type RestraintMode = 'simple' | 'advanced';
 export type SimpleRestraint = 'FF' | 'PP' | 'PF' | 'FC' | 'custom';

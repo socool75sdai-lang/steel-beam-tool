@@ -102,6 +102,27 @@ const RHS: SteelSection[] = [
   { designation: 'RHS300x200x10',  type: 'RHS', mass_kg_m: 73.7,  d: 300, bf: 200, tf: 10.0, tw: 10.0, Ag: 9390, Ix: 110e6,    Sx: 902e3,   Zx: 733e3,   Iy: 58.8e6,   J: 117e6,    Iw: 0 },
 ];
 
+// WB (Welded Beam) dimensions and Ix/Iy sourced from steelweb.info (Australian welded beam
+// tables, AS/NZS 3679.2 Grade 300). Ag, Sx, Zx, J, Iw computed from plate geometry using exact
+// thin-walled doubly-symmetric I-section formulas (welded sections have no fillet radii, so the
+// closed form is catalogue-accurate — reproduces published Ix/Iy to within 0.3%).
+const WB: SteelSection[] = [
+  { designation: '700WB115',  type: 'WB', mass_kg_m: 115, d: 692,  bf: 250, tf: 16, tw: 10, Ag: 14600, Ix: 1150e6, Sx: 3790e3,  Zx: 3320e3,  Iy: 41.7e6, J: 903e3,   Iw: 4760e9 },
+  { designation: '700WB130',  type: 'WB', mass_kg_m: 130, d: 700,  bf: 250, tf: 20, tw: 10, Ag: 16600, Ix: 1400e6, Sx: 4490e3,  Zx: 4000e3,  Iy: 52.1e6, J: 1550e3,  Iw: 6020e9 },
+  { designation: '700WB150',  type: 'WB', mass_kg_m: 150, d: 710,  bf: 250, tf: 25, tw: 10, Ag: 19100, Ix: 1710e6, Sx: 5370e3,  Zx: 4820e3,  Iy: 65.2e6, J: 2820e3,  Iw: 7650e9 },
+  { designation: '700WB173',  type: 'WB', mass_kg_m: 173, d: 716,  bf: 275, tf: 28, tw: 10, Ag: 22000, Ix: 2060e6, Sx: 6390e3,  Zx: 5750e3,  Iy: 97.1e6, J: 4240e3,  Iw: 11500e9 },
+  { designation: '800WB122',  type: 'WB', mass_kg_m: 122, d: 792,  bf: 250, tf: 16, tw: 10, Ag: 15600, Ix: 1570e6, Sx: 4550e3,  Zx: 3960e3,  Iy: 41.7e6, J: 936e3,   Iw: 6280e9 },
+  { designation: '800WB146',  type: 'WB', mass_kg_m: 146, d: 800,  bf: 275, tf: 20, tw: 10, Ag: 18600, Ix: 2040e6, Sx: 5730e3,  Zx: 5100e3,  Iy: 69.4e6, J: 1720e3,  Iw: 10600e9 },
+  { designation: '800WB168',  type: 'WB', mass_kg_m: 168, d: 810,  bf: 275, tf: 25, tw: 10, Ag: 21350, Ix: 2480e6, Sx: 6840e3,  Zx: 6120e3,  Iy: 86.7e6, J: 3120e3,  Iw: 13400e9 },
+  { designation: '800WB192',  type: 'WB', mass_kg_m: 192, d: 816,  bf: 300, tf: 28, tw: 10, Ag: 24400, Ix: 2970e6, Sx: 8060e3,  Zx: 7280e3,  Iy: 126e6,  J: 4640e3,  Iw: 19600e9 },
+  { designation: '900WB175',  type: 'WB', mass_kg_m: 175, d: 900,  bf: 300, tf: 20, tw: 12, Ag: 22320, Ix: 2960e6, Sx: 7500e3,  Zx: 6580e3,  Iy: 90.1e6, J: 2100e3,  Iw: 17400e9 },
+  { designation: '900WB218',  type: 'WB', mass_kg_m: 218, d: 910,  bf: 350, tf: 25, tw: 12, Ag: 27820, Ix: 4060e6, Sx: 9960e3,  Zx: 8920e3,  Iy: 179e6,  J: 4140e3,  Iw: 35000e9 },
+  { designation: '900WB257',  type: 'WB', mass_kg_m: 257, d: 916,  bf: 400, tf: 28, tw: 12, Ag: 32720, Ix: 5050e6, Sx: 12200e3, Zx: 11000e3, Iy: 299e6,  J: 6350e3,  Iw: 58900e9 },
+  { designation: '1000WB215', type: 'WB', mass_kg_m: 215, d: 1000, bf: 300, tf: 20, tw: 16, Ag: 27360, Ix: 4060e6, Sx: 9570e3,  Zx: 8120e3,  Iy: 90.3e6, J: 2910e3,  Iw: 21700e9 },
+  { designation: '1000WB258', type: 'WB', mass_kg_m: 258, d: 1010, bf: 350, tf: 25, tw: 16, Ag: 32860, Ix: 5430e6, Sx: 12300e3, Zx: 10800e3, Iy: 179e6,  J: 4960e3,  Iw: 43400e9 },
+  { designation: '1000WB322', type: 'WB', mass_kg_m: 322, d: 1024, bf: 400, tf: 32, tw: 16, Ag: 40960, Ix: 7480e6, Sx: 16400e3, Zx: 14600e3, Iy: 342e6,  J: 10000e3, Iw: 84100e9 },
+];
+
 const CHS: SteelSection[] = [
   { designation: 'CHS48.3x3.2',    type: 'CHS', mass_kg_m: 3.56,  d: 48.3,  bf: 48.3,  tf: 3.2, tw: 3.2, Ag: 453,  Ix: 0.117e6,  Sx: 6.52e3,  Zx: 4.83e3,  Iy: 0.117e6,  J: 0.234e6,  Iw: 0 },
   { designation: 'CHS60.3x3.6',    type: 'CHS', mass_kg_m: 5.03,  d: 60.3,  bf: 60.3,  tf: 3.6, tw: 3.6, Ag: 641,  Ix: 0.262e6,  Sx: 11.5e3,  Zx: 8.69e3,  Iy: 0.262e6,  J: 0.524e6,  Iw: 0 },
@@ -125,4 +146,5 @@ export const SECTION_DATABASE: Record<SectionType, SteelSection[]> = {
   SHS: [...SHS].sort(sortByMass),
   CHS: [...CHS].sort(sortByMass),
   RHS: [...RHS].sort(sortByMass),
+  WB:  [...WB].sort(sortByMass),
 };
