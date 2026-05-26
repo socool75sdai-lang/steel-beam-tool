@@ -34,6 +34,12 @@ function safePct(num: number, denom: number): number {
   return (num / denom) * 100;
 }
 
+interface RefLine {
+  value: number;
+  label: string;
+  pass: boolean;
+}
+
 function drawDiagram(
   doc: jsPDF,
   points: DiagramPoint[],
@@ -44,6 +50,7 @@ function drawDiagram(
   width: number,
   height: number,
   label: string,
+  refLines: RefLine[] = [],
 ): void {
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
@@ -58,27 +65,46 @@ function drawDiagram(
   if (points.length < 2 || span <= 0) return;
 
   const values = points.map((p) => p[field]);
-  const maxAbs = Math.max(...values.map((v) => Math.abs(v)), 1e-9);
+  const demandMax = Math.max(...values.map((v) => Math.abs(v)), 1e-9);
+  // Scale to include capacity reference lines (mirrors Recharts extendDomain)
+  const scaleMax = Math.max(demandMax, ...refLines.map((r) => Math.abs(r.value)));
   const xScale = width / span;
   const yScale = (height / 2) * 0.9;
 
+  // Demand curve
   doc.setDrawColor(30, 64, 175);
   doc.setLineWidth(0.3);
   let prevX = originX + points[0].x * xScale;
-  let prevY = originY + height / 2 - (points[0][field] / maxAbs) * yScale;
+  let prevY = originY + height / 2 - (points[0][field] / scaleMax) * yScale;
   for (let i = 1; i < points.length; i++) {
     const x = originX + points[i].x * xScale;
-    const y = originY + height / 2 - (points[i][field] / maxAbs) * yScale;
+    const y = originY + height / 2 - (points[i][field] / scaleMax) * yScale;
     doc.line(prevX, prevY, x, y);
     prevX = x;
     prevY = y;
   }
+
+  // Capacity reference lines (dashed, green=pass / red=fail)
+  for (const ref of refLines) {
+    const ry = originY + height / 2 - (ref.value / scaleMax) * yScale;
+    const color: [number, number, number] = ref.pass ? [22, 163, 74] : [220, 38, 38];
+    doc.setDrawColor(color[0], color[1], color[2]);
+    doc.setLineWidth(0.2);
+    for (let dx = 0; dx < width; dx += 4) {
+      doc.line(originX + dx, ry, originX + Math.min(dx + 2, width), ry);
+    }
+    doc.setFontSize(7);
+    doc.setTextColor(color[0], color[1], color[2]);
+    doc.text(ref.label, originX + width + 1, ry + 1);
+    doc.setTextColor(0, 0, 0);
+  }
+
   doc.setLineWidth(0.2);
   doc.setDrawColor(0, 0, 0);
 
-  // Max label
+  // Max demand label
   doc.setFontSize(8);
-  doc.text(`max |${field}| = ${maxAbs.toFixed(2)}`, originX + width - 50, originY + height + 4);
+  doc.text(`max |${field}| = ${demandMax.toFixed(2)}`, originX + width - 50, originY + height + 4);
 }
 
 function drawDeflectionDiagram(
@@ -136,22 +162,29 @@ function drawDeflectionDiagram(
     );
   }
 
-  // Limit lines (green pass / red fail)
+  // Limit lines (green pass / red fail), each labelled L/<divisor>
   const gqColor: [number, number, number] = passGQ ? [22, 163, 74] : [220, 38, 38];
   const gColor: [number, number, number] = passG ? [22, 163, 74] : [220, 38, 38];
+  doc.setFontSize(7);
+
   doc.setLineWidth(0.2);
   doc.setDrawColor(gqColor[0], gqColor[1], gqColor[2]);
   doc.line(originX, originY + limitGQ * yScale, originX + width, originY + limitGQ * yScale);
-  doc.setFontSize(8);
+  doc.setTextColor(gqColor[0], gqColor[1], gqColor[2]);
   doc.text(`L/${Math.round(span / (limitGQ / 1000))}`, originX + width + 1, originY + limitGQ * yScale + 1, {
-    maxWidth: 15,
+    maxWidth: 18,
   });
 
   doc.setDrawColor(gColor[0], gColor[1], gColor[2]);
   doc.line(originX, originY + limitG * yScale, originX + width, originY + limitG * yScale);
+  doc.setTextColor(gColor[0], gColor[1], gColor[2]);
+  doc.text(`L/${Math.round(span / (limitG / 1000))}`, originX + width + 1, originY + limitG * yScale + 1, {
+    maxWidth: 18,
+  });
 
   doc.setLineWidth(0.2);
   doc.setDrawColor(0, 0, 0);
+  doc.setTextColor(0, 0, 0);
 }
 
 export async function exportToPDF(args: PdfExportArgs): Promise<void> {
@@ -213,8 +246,12 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
   y += lineH;
   doc.text(`Tributary width: ${inputs.tributaryWidth.toFixed(2)} m`, 10, y);
   y += lineH;
-  doc.text(`Restraint: ${inputs.restraint.mode}, ${restraintSummary(inputs.restraint)}`, 10, y);
-  y += lineH;
+  const restraintStr = `Restraint: ${inputs.restraint.mode}, ${restraintSummary(inputs.restraint)}`;
+  const restraintLines = doc.splitTextToSize(restraintStr, 90) as string[];
+  for (const line of restraintLines) {
+    doc.text(line, 10, y);
+    y += lineH;
+  }
   doc.text('Loads:', 10, y);
   y += lineH;
 
@@ -281,17 +318,17 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
   // ===== Capacity check table =====
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
-  doc.text('Design Check Summary', 10, 90);
+  doc.text('Design Check Summary', 10, 115);
 
   doc.setFontSize(9);
-  doc.text('Check', 10, 95);
-  doc.text('Demand', 70, 95);
-  doc.text('Capacity', 105, 95);
-  doc.text('Util', 140, 95);
-  doc.text('Status', 170, 95);
+  doc.text('Check', 10, 120);
+  doc.text('Demand', 70, 120);
+  doc.text('Capacity', 105, 120);
+  doc.text('Util', 140, 120);
+  doc.text('Status', 170, 120);
   doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.2);
-  doc.line(10, 96.5, 200, 96.5);
+  doc.line(10, 121.5, 200, 121.5);
 
   doc.setFont('helvetica', 'normal');
 
@@ -341,7 +378,7 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
     },
   ];
 
-  const rowYs = [101, 107, 113, 119, 125];
+  const rowYs = [127, 133, 139, 145, 151];
   rows.forEach((row, i) => {
     const ry = rowYs[i];
     doc.setTextColor(0, 0, 0);
@@ -366,15 +403,31 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
     doc.line(10, ry + 1.5, 200, ry + 1.5);
   });
 
-  // ===== Diagrams =====
+  // ===== Diagrams (page 2) =====
+  doc.addPage();
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.setTextColor(0, 0, 0);
-  doc.text('Diagrams', 10, 140);
+  doc.text('Diagrams', 10, 15);
   doc.setFont('helvetica', 'normal');
 
-  drawDiagram(doc, bmd, 'moment', inputs.span, 10, 148, 190, 40, 'Bending Moment Diagram (kN.m)');
-  drawDiagram(doc, sfd, 'shear', inputs.span, 10, 197, 190, 40, 'Shear Force Diagram (kN)');
+  const diagW = 160;
+  drawDiagram(doc, bmd, 'moment', inputs.span, 10, 22, diagW, 40, 'Bending Moment Diagram (kN.m)', [
+    {
+      value: results.phiMs,
+      label: `phiMs = ${results.phiMs.toFixed(1)} kN.m`,
+      pass: results.passes.sectionMoment,
+    },
+    {
+      value: results.phiMbx,
+      label: `phiMbx = ${results.phiMbx.toFixed(1)} kN.m`,
+      pass: results.passes.memberMoment,
+    },
+  ]);
+  drawDiagram(doc, sfd, 'shear', inputs.span, 10, 71, diagW, 40, 'Shear Force Diagram (kN)', [
+    { value: results.phiVv, label: `+phiVv = ${results.phiVv.toFixed(1)} kN`, pass: results.passes.shear },
+    { value: -results.phiVv, label: `-phiVv = ${results.phiVv.toFixed(1)} kN`, pass: results.passes.shear },
+  ]);
   drawDeflectionDiagram(
     doc,
     deflectionGpsiLQ,
@@ -385,8 +438,8 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
     results.passes.deflectionG,
     inputs.span,
     10,
-    246,
-    190,
+    120,
+    diagW,
     40,
     'Deflection Profile (mm)',
   );
