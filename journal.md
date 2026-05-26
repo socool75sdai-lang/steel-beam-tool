@@ -231,3 +231,96 @@ Notes for when this is planned: items 1–2 touch the engineering/types layer (l
 ψ_l factor; position-as-% conversion), unlike Rev 2 which was UI-only. Items 3–5 are all in
 `src/utils/pdfExport.ts`; item 4 likely needs chart rendering (e.g. render the Recharts SVG or
 an html2canvas capture) rather than the current manual jsPDF line-drawing.
+
+---
+
+## 2026-05-26 — Rev 3 Orchestration Planned (5 items)
+
+### Context
+Handover spec at `.Improvements\Rev 3\HANDOVER.md` received and reviewed. Five items:
+1. Deflection combo G+Q → G+ψ_l·Q with live load category selector
+2. Point load position: absolute metres → % of span
+3. PDF text overlap fix + move diagrams to page 2
+4. PDF diagrams: add φMs/φMbx/φVv reference lines, L/360 label
+5. PDF page 3+: running calculation sheet with DesignIntermediates + AS clause references
+
+### Orchestration
+Three implementation cards (3R1 → 3R2 → 3R3) + one integration card (3I1), strictly sequential.
+Sequential execution on `main` (no worktrees) — justified by extensive file conflicts:
+`types/index.ts` (Items 1+5), `deflection.ts`/`LoadPanel.tsx` (Items 1+2), `evaluate.ts` (Items 1+5),
+`pdfExport.ts` (Items 2+3+4+5).
+
+Agent roles: Implementer, Critic (spec conformance review, no implementation),
+Test Validator (tsc + build + **browser MCP visual confirmation required for every card**).
+
+Kanban board at `.nova/KANBAN.md`. Card files at `.nova/cards/3R1.md`–`3I1.md`.
+Plan at `.nova/REV3-ORCHESTRATION-PLAN.md`.
+
+### Key decisions
+- `PointLoad.position` storage unit changes from metres to 0–100 percent (no migration needed:
+  state resets on page reload, per HANDOVER note).
+- `CapacityResults.deflectionGQ` renamed `deflectionGpsiLQ` throughout. All references updated
+  in ResultsPanel.tsx, pdfExport.ts, and evaluate.ts.
+- `pdfExport.ts` page structure post-3R2: page 1 = inputs + section props + check table;
+  page 2 = diagrams; page 3+ = calc sheet.
+- Default `liveLoadType = 'office'` (ψ_l = 0.4).
+- No new npm packages.
+
+---
+
+## 2026-05-26 — Rev 3 Implemented (5 items) + recovered from false-DONE board
+
+### Context
+Resumed to execute the Rev 3 orchestration plan (`.nova/REV3-ORCHESTRATION-PLAN.md`). On inspection
+the kanban board claimed all four cards DONE, but `steel-beam-tool/src/` contained **zero** Rev 3
+changes: `psiFactors.ts` was absent, `liveLoadType`/`deflectionGpsiLQ`/`DesignIntermediates` did not
+exist, and the old `deflectionGQ` field names were still in place. A prior run had marked the board
+DONE without committing (or after losing) the implementation. Treated the source as ground truth,
+reset the board, and implemented the plan for real.
+
+### Work completed
+Sequential execution on `main` (no worktrees), one card at a time, each gated with
+`npx tsc --noEmit` + `npm run build` and committed before moving on (per-card commits chosen
+specifically to prevent a repeat of the work-loss above).
+
+- **3R1 — Engineering corrections (Items 1+2)** — commit `6c7d5ae`. Added `LiveLoadType` +
+  `as1170/psiFactors.ts` (AS1170.1 Table 4.1 ψ_l values). Deflection check is now G+ψ_l·Q: both
+  `calcDeflection` and `calcDeflectionProfile` take a `psiL` param; point-load position is stored as
+  % of span and converted `(pos/100)*span` in `deflection.ts` and `loadCombinations.ts`. Renamed
+  `deflectionGQ`→`deflectionGpsiLQ` (+ limit/passes) across types/evaluate/ResultsPanel/pdfExport.
+  LoadPanel got the live-load dropdown at the top, "Position (% span)" header, 0–100 validation.
+  Default `liveLoadType: 'office'`.
+- **3R2 — PDF layout + diagrams (Items 3+4)** — commit `187dde6` (pdfExport.ts only). Restraint
+  line wraps to 90 mm; Design Check Summary table moved to y=115 clear of both columns; diagrams
+  relocated to page 2. `drawDiagram` gained an optional `refLines` param — BMD draws phiMs+phiMbx,
+  SFD draws ±phiVv, all dashed and green/red by pass/fail; deflection profile now labels both
+  L/<GQ> and L/<G> limit lines.
+- **3R3 — PDF calc sheet (Item 5)** — commit `319301f`. Added `DesignIntermediates` to
+  `CapacityResults`; extended `momentCapacity`/`shearCapacity` return objects (not replaced) and
+  assembled the block in `evaluate.ts`. pdfExport renders a page-3 calc sheet: 13 numbered steps
+  with AS clause tags, formula + substituted-value + result lines, and a y>270 overflow guard.
+
+### QA (3I1 — Playwright MCP, now available)
+All 7 HANDOVER verification gates pass. Test config: 150UB14.0, 10 m span, 50 kN Q point load at
+50%, Storage live-load type (intentionally overloaded to exercise red/green reference lines).
+Browser: dropdown at top of Load panel; Storage → "Deflection (G+0.6Q)" in table and chart legend;
+"Position (% span)" header; 50% maps to midspan (symmetric deflection, no NaN). PDF (3 pages):
+page 1 no overlap + "@ 50% (Q)"; page 2 ref lines colour-coded; page 3 calc sheet with clause tags.
+Evidence in `.nova/evidence/rev3/` (3 screenshots + sample PDF).
+
+### Key decisions / deviations from plan
+- **PDF label text is ASCII** ("phiMs", "kN.m", "lambda_f", "sqrt", "<=") — jsPDF's standard
+  helvetica cannot render Greek φ/λ/ψ, ·, ², √, ≤. The existing PDF code already used "kN.m" for
+  this reason. UI (React/DOM) still uses proper ψ_l/φ glyphs.
+- **Page-2 diagram width 160 mm** (not the plan's 190 mm) so the right-edge capacity-line labels
+  Item 4 requires actually fit on the A4 page instead of clipping.
+- **`PdfExportArgs` was not extended for `intermediates`** and ResultsPanel's call site was left
+  unchanged — `intermediates` lives on `CapacityResults`, which `exportToPDF` already receives, so
+  it is read as `results.intermediates`. Cleaner than the plan's separate arg; avoids touching a
+  file 3R3 did not own.
+- **Page-4 overflow not produced**: the calc sheet's fixed 13-step content fits on page 3. The
+  overflow guard is implemented exactly per spec; it simply doesn't trigger for this content length.
+
+### State
+All four Rev 3 cards DONE and committed on `main`. tsc clean, build clean. Working tree: tracking
+files (`.nova/`, `journal.md`) still to commit.

@@ -1,29 +1,26 @@
-# Rev 2 Kanban Board — Steel Beam Design Tool
+# Rev 3 Kanban Board — Steel Beam Design Tool
 
 Pull model: `BACKLOG → READY → IN_PROGRESS → CRITIC_REVIEW → QA → DONE` (or `BLOCKED`).
-Execution mode: single-agent direct execution on `main` (see note below). Plan: `REV2-ORCHESTRATION-PLAN.md`.
+Execution mode: single-agent direct execution on `main`. Plan: `.nova/REV3-ORCHESTRATION-PLAN.md`.
 
 | Card | Title | Column | Branch |
 |------|-------|--------|--------|
-| R1 | Leading-zeros blur fix (Geometry + Load panels) | DONE | (main) |
-| R2 | Restraint panel — blur fix + count-based spacing | DONE | (main) |
-| R3 | Capacity reference lines always display | DONE | (main) |
-| R4 | App branding — logo, rename, tab bar, span-sync | DONE | (main) |
-| R5 | Rename: index.html title + PDF report header | DONE | (main) |
-| I1 | Integration — verification + final visual QA | DONE | (main) |
+| 3R1 | Engineering corrections (Items 1+2) | DONE | (main) |
+| 3R2 | PDF layout + enhanced diagrams (Items 3+4) | DONE | (main) |
+| 3R3 | PDF calc sheet (Item 5) | DONE | (main) |
+| 3I1 | Integration — verification + final visual QA | DONE | (main) |
 
-## Execution note — deviation from worktree model
+3R2 → READY when 3R1 DONE. 3R3 → READY when 3R2 DONE. 3I1 → READY when 3R3 DONE.
 
-The plan specified 5 parallel worktree branches + an Integrator merge pass. Because all 5 cards
-own completely disjoint files (zero conflicts) and a single agent executed them, the worktree
-isolation + serial-merge ceremony would have added overhead with no benefit. All cards were
-implemented directly on `main`. Every verification gate the plan defined was still run:
-`tsc --noEmit`, `npm run build`, and Playwright browser visual confirmation of each item.
+## Execution note
 
-## Key finding (R1)
+**Board reset 2026-05-26 (re-execution):** A prior run marked all four cards DONE in this board,
+but no Rev 3 source changes were present in `steel-beam-tool/src/` (the implementation was never
+committed or was lost). Board reset to reflect ground truth; cards are being implemented for real,
+sequentially on `main`, each gated with `npx tsc --noEmit` + `npm run build`.
 
-The HANDOVER's prescribed onBlur pattern (re-fire `onChange` with `parseFloat`) does **not**
-remove leading zeros in React 19 when the typed text parses to the value already in state:
-React sees no value-prop change and skips reconciling the input's DOM text. Caught in QA
-(browser showed `010` persisting while state was correctly `10`). Fixed by having onBlur also
-imperatively normalize the field: `e.target.value = String(v)`. See `cards/R1.md`.
+**Browser visual confirmation:** Done via Playwright MCP (available this run). All 7 HANDOVER
+gates confirmed in-browser and by inspecting the exported PDF (3 pages). Evidence in
+`.nova/evidence/rev3/`. Commits: 3R1 6c7d5ae, 3R2 187dde6, 3R3 319301f.
+
+**Status:** All four cards DONE — Rev 3 complete.
