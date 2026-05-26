@@ -61,14 +61,15 @@ function deflectionPartialUDL(
  */
 export function calcDeflection(
   inputs: DesignInputs,
-  combo: 'G+Q' | 'G',
+  combo: 'G+ψ_l·Q' | 'G',
+  psiL = 1.0,
 ): DeflectionResult {
   const E = 200_000; // MPa = N/mm²
   const EI = E * inputs.section.Ix; // N·mm²
   const L = inputs.span * 1000; // mm
 
   const gFactor = 1.0;
-  const qFactor = combo === 'G+Q' ? 1.0 : 0.0;
+  const qFactor = combo === 'G+ψ_l·Q' ? psiL : 0.0;
 
   const pointLoads: CalcPointLoad[] = [];
   const lineLoads: CalcLineLoad[] = [];
@@ -79,7 +80,7 @@ export function calcDeflection(
     if (f === 0) continue;
     pointLoads.push({
       P: pl.magnitude * 1000 * f,
-      a: pl.position * 1000,
+      a: (pl.position / 100) * inputs.span * 1000,
     });
   }
 
@@ -157,14 +158,15 @@ export function calcDeflection(
  */
 export function calcDeflectionProfile(
   inputs: DesignInputs,
-  combo: 'G+Q' | 'G',
+  combo: 'G+ψ_l·Q' | 'G',
+  psiL = 1.0,
 ): DeflectionProfilePoint[] {
   const E = 200_000; // MPa = N/mm²
   const EI = E * inputs.section.Ix; // N·mm²
   const L = inputs.span * 1000; // mm
 
   const gFactor = 1.0;
-  const qFactor = combo === 'G+Q' ? 1.0 : 0.0;
+  const qFactor = combo === 'G+ψ_l·Q' ? psiL : 0.0;
 
   const pointLoads: CalcPointLoad[] = [];
   const lineLoads: CalcLineLoad[] = [];
@@ -172,7 +174,7 @@ export function calcDeflectionProfile(
   for (const pl of inputs.loads.point) {
     const f = pl.category === 'G' ? gFactor : qFactor;
     if (f === 0) continue;
-    pointLoads.push({ P: pl.magnitude * 1000 * f, a: pl.position * 1000 });
+    pointLoads.push({ P: pl.magnitude * 1000 * f, a: (pl.position / 100) * inputs.span * 1000 });
   }
 
   for (const ll of inputs.loads.line) {

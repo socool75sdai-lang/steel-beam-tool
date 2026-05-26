@@ -1,5 +1,6 @@
-import type { DesignInputs, PointLoad, LineLoad, AreaLoad, LoadCategory } from '@/types';
+import type { DesignInputs, PointLoad, LineLoad, AreaLoad, LoadCategory, LiveLoadType } from '@/types';
 import { calcSelfWeightKnPerM } from '@/engineering/sections/sectionUtils';
+import { LIVE_LOAD_LABELS, PSI_L_FACTORS } from '@/engineering/as1170/psiFactors';
 
 interface LoadPanelProps {
   inputs: DesignInputs;
@@ -86,6 +87,24 @@ export function LoadPanel({ inputs, onChange }: LoadPanelProps) {
     <section className="border rounded p-4 mb-4 bg-white shadow-sm mc-panel">
       <h2 className="text-lg font-semibold mb-3 mc-heading">2. Loads</h2>
 
+      {/* Live Load Category — drives ψ_l in the G+ψ_l·Q deflection check */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium mb-1">
+          Live Load Category (ψ_l factor)
+        </label>
+        <select
+          className={inputCls}
+          value={inputs.liveLoadType}
+          onChange={(e) => onChange({ liveLoadType: e.target.value as LiveLoadType })}
+        >
+          {(Object.keys(LIVE_LOAD_LABELS) as LiveLoadType[]).map((k) => (
+            <option key={k} value={k}>
+              {LIVE_LOAD_LABELS[k]} (ψ_l = {PSI_L_FACTORS[k]})
+            </option>
+          ))}
+        </select>
+      </div>
+
       {/* Point Loads */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
@@ -103,13 +122,13 @@ export function LoadPanel({ inputs, onChange }: LoadPanelProps) {
         {inputs.loads.point.length > 0 && (
           <div className="grid grid-cols-12 gap-2 mb-1 text-xs text-gray-500 font-medium">
             <span className="col-span-3">Magnitude (kN)</span>
-            <span className="col-span-3">Position (m)</span>
+            <span className="col-span-3">Position (% span)</span>
             <span className="col-span-4">Category</span>
             <span className="col-span-2" />
           </div>
         )}
         {inputs.loads.point.map((p) => {
-          const posInvalid = p.position < 0 || p.position > span;
+          const posInvalid = p.position < 0 || p.position > 100;
           return (
             <div key={p.id} className="grid grid-cols-12 gap-2 items-center mb-1">
               <input
@@ -141,10 +160,10 @@ export function LoadPanel({ inputs, onChange }: LoadPanelProps) {
                     updatePoint(p.id, { position: v });
                     e.target.value = String(v);
                   }}
-                  placeholder="position (m)"
+                  placeholder="% of span"
                 />
                 {posInvalid && (
-                  <p className="text-xs text-red-600 mt-0.5">Out of span</p>
+                  <p className="text-xs text-red-600 mt-0.5">Must be 0–100%</p>
                 )}
               </div>
               <div className="col-span-4 flex gap-1">

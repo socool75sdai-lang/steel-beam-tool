@@ -24,7 +24,7 @@ export function combineLoads(inputs: DesignInputs, combo: ComboFactors): Combine
 
   for (const p of inputs.loads.point) {
     const factor = p.category === 'G' ? combo.g : combo.q;
-    point.push({ magnitude: p.magnitude * factor, position: p.position });
+    point.push({ magnitude: p.magnitude * factor, position: (p.position / 100) * inputs.span });
   }
 
   for (const l of inputs.loads.line) {

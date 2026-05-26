@@ -11,6 +11,7 @@ import {
   calcEffectiveLength,
   calcAlphaM,
 } from '@/engineering/as4100/effectiveLength';
+import { getPsiL } from '@/engineering/as1170/psiFactors';
 
 export interface EvaluationResult {
   results: CapacityResults;
@@ -31,18 +32,19 @@ export function evaluateDesign(inputs: DesignInputs): EvaluationResult {
   const memCap = calcMemberCapacity(inputs.section, fy, Le_m * 1000, alphaM);
   const shear = calcShearCapacity(inputs.section, fy);
 
-  const deflGQ = calcDeflection(inputs, 'G+Q').max;
+  const psiL = getPsiL(inputs.liveLoadType);
+  const deflGpsiLQ = calcDeflection(inputs, 'G+ψ_l·Q', psiL).max;
   const deflG = calcDeflection(inputs, 'G').max;
-  const deflLimitGQ = (inputs.span * 1000) / inputs.deflLimits.GQ;
+  const deflLimitGpsiLQ = (inputs.span * 1000) / inputs.deflLimits.GQ;
   const deflLimitG = (inputs.span * 1000) / inputs.deflLimits.G;
 
   const sectionMoment = factored.Mmax <= secCap.phiMs;
   const memberMoment = factored.Mmax <= memCap.phiMbx;
   const shearPass = factored.Vmax <= shear.phiVv;
-  const deflectionGQ = deflGQ <= deflLimitGQ;
+  const deflectionGpsiLQ = deflGpsiLQ <= deflLimitGpsiLQ;
   const deflectionG = deflG <= deflLimitG;
   const overall =
-    sectionMoment && memberMoment && shearPass && deflectionGQ && deflectionG;
+    sectionMoment && memberMoment && shearPass && deflectionGpsiLQ && deflectionG;
 
   const results: CapacityResults = {
     Mmax: factored.Mmax,
@@ -56,15 +58,15 @@ export function evaluateDesign(inputs: DesignInputs): EvaluationResult {
     Le: Le_m * 1000,
     alphaM,
     alphaS: memCap.alphaS,
-    deflectionGQ: deflGQ,
+    deflectionGpsiLQ: deflGpsiLQ,
     deflectionG: deflG,
-    deflectionLimitGQ: deflLimitGQ,
+    deflectionLimitGpsiLQ: deflLimitGpsiLQ,
     deflectionLimitG: deflLimitG,
     passes: {
       sectionMoment,
       memberMoment,
       shear: shearPass,
-      deflectionGQ,
+      deflectionGpsiLQ,
       deflectionG,
       overall,
     },
@@ -74,7 +76,7 @@ export function evaluateDesign(inputs: DesignInputs): EvaluationResult {
     factored: factored.bmd,
     serviceability: servic.bmd,
     dead: dead.bmd,
-    deflectionGQ: calcDeflectionProfile(inputs, 'G+Q'),
+    deflectionGpsiLQ: calcDeflectionProfile(inputs, 'G+ψ_l·Q', psiL),
     deflectionG: calcDeflectionProfile(inputs, 'G'),
   };
 

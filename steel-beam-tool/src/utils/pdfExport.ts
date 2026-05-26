@@ -1,12 +1,13 @@
 import type { DesignInputs, CapacityResults, DiagramPoint, DeflectionProfilePoint } from '@/types';
 import { jsPDF } from 'jspdf';
+import { getPsiL } from '@/engineering/as1170/psiFactors';
 
 export interface PdfExportArgs {
   inputs: DesignInputs;
   results: CapacityResults;
   bmd: DiagramPoint[];
   sfd: DiagramPoint[];
-  deflectionGQ: DeflectionProfilePoint[];
+  deflectionGpsiLQ: DeflectionProfilePoint[];
   deflectionG: DeflectionProfilePoint[];
 }
 
@@ -154,7 +155,8 @@ function drawDeflectionDiagram(
 }
 
 export async function exportToPDF(args: PdfExportArgs): Promise<void> {
-  const { inputs, results, bmd, sfd, deflectionGQ, deflectionG } = args;
+  const { inputs, results, bmd, sfd, deflectionGpsiLQ, deflectionG } = args;
+  const psiL = getPsiL(inputs.liveLoadType);
   const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
 
   // ===== Header =====
@@ -220,7 +222,7 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
   for (const p of inputs.loads.point) {
     if (y > maxLoadY) break;
     doc.text(
-      `  P: ${p.magnitude.toFixed(2)} kN @ ${p.position.toFixed(2)} m (${p.category})`,
+      `  P: ${p.magnitude.toFixed(2)} kN @ ${p.position.toFixed(0)}% (${p.category})`,
       10,
       y,
     );
@@ -324,11 +326,11 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
       pass: results.passes.shear,
     },
     {
-      label: 'Deflection G+Q',
-      demand: `${results.deflectionGQ.toFixed(1)} mm`,
-      capacity: `${results.deflectionLimitGQ.toFixed(1)} mm`,
-      util: safePct(results.deflectionGQ, results.deflectionLimitGQ),
-      pass: results.passes.deflectionGQ,
+      label: `Deflection G+${psiL}Q`,
+      demand: `${results.deflectionGpsiLQ.toFixed(1)} mm`,
+      capacity: `${results.deflectionLimitGpsiLQ.toFixed(1)} mm`,
+      util: safePct(results.deflectionGpsiLQ, results.deflectionLimitGpsiLQ),
+      pass: results.passes.deflectionGpsiLQ,
     },
     {
       label: 'Deflection G',
@@ -375,11 +377,11 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
   drawDiagram(doc, sfd, 'shear', inputs.span, 10, 197, 190, 40, 'Shear Force Diagram (kN)');
   drawDeflectionDiagram(
     doc,
-    deflectionGQ,
+    deflectionGpsiLQ,
     deflectionG,
-    results.deflectionLimitGQ,
+    results.deflectionLimitGpsiLQ,
     results.deflectionLimitG,
-    results.passes.deflectionGQ,
+    results.passes.deflectionGpsiLQ,
     results.passes.deflectionG,
     inputs.span,
     10,

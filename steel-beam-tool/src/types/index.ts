@@ -5,6 +5,13 @@ export type SimpleRestraint = 'FF' | 'PP' | 'PF' | 'FC' | 'custom';
 export type EndRestraint = 'F' | 'P' | 'L' | 'U';
 export type SectionClass = 'compact' | 'noncompact' | 'slender';
 export type ComboName = '1.2G+1.5Q' | 'G+Q' | 'G';
+export type LiveLoadType =
+  | 'domestic'
+  | 'office'
+  | 'parking'
+  | 'retail'
+  | 'storage'
+  | 'roof';
 
 export interface SteelSection {
   designation: string;
@@ -74,6 +81,7 @@ export interface DesignInputs {
   loads: Loads;
   restraint: RestraintConfig;
   deflLimits: DeflLimits;
+  liveLoadType: LiveLoadType;
 }
 
 export interface DiagramPoint {
@@ -99,15 +107,15 @@ export interface CapacityResults {
   Le: number;
   alphaM: number;
   alphaS: number;
-  deflectionGQ: number;
+  deflectionGpsiLQ: number;
   deflectionG: number;
-  deflectionLimitGQ: number;
+  deflectionLimitGpsiLQ: number;
   deflectionLimitG: number;
   passes: {
     sectionMoment: boolean;
     memberMoment: boolean;
     shear: boolean;
-    deflectionGQ: boolean;
+    deflectionGpsiLQ: boolean;
     deflectionG: boolean;
     overall: boolean;
   };
@@ -117,7 +125,7 @@ export interface DiagramSet {
   factored: DiagramPoint[];
   serviceability: DiagramPoint[];
   dead: DiagramPoint[];
-  deflectionGQ: DeflectionProfilePoint[];
+  deflectionGpsiLQ: DeflectionProfilePoint[];
   deflectionG: DeflectionProfilePoint[];
 }
 

@@ -24,6 +24,7 @@ function initialInputs(): DesignInputs {
       alphaMOverride: null,
     },
     deflLimits: { GQ: 300, G: 360 },
+    liveLoadType: 'office',
   };
 }
 

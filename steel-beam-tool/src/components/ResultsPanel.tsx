@@ -11,6 +11,7 @@ import {
 } from 'recharts';
 import type { DesignInputs, CapacityResults, DiagramSet, DeflLimits } from '@/types';
 import { exportToPDF } from '@/utils/pdfExport';
+import { getPsiL } from '@/engineering/as1170/psiFactors';
 
 interface ResultsPanelProps {
   inputs: DesignInputs;
@@ -44,6 +45,9 @@ export function ResultsPanel({ inputs, results, diagrams, onDeflLimitsChange }: 
     );
   }
 
+  const psiL = getPsiL(inputs.liveLoadType);
+  const deflLabel = `G+${psiL}Q`;
+
   const chartData = diagrams.factored.map((pt, i) => ({
     x: pt.x,
     factoredM: pt.moment,
@@ -52,9 +56,9 @@ export function ResultsPanel({ inputs, results, diagrams, onDeflLimitsChange }: 
     servicV: diagrams.serviceability[i]?.shear ?? 0,
   }));
 
-  const deflData = diagrams.deflectionGQ.map((pt, i) => ({
+  const deflData = diagrams.deflectionGpsiLQ.map((pt, i) => ({
     x: pt.x,
-    deltaGQ: pt.delta,
+    deltaGpsiLQ: pt.delta,
     deltaG: diagrams.deflectionG[i]?.delta ?? 0,
   }));
 
@@ -65,7 +69,7 @@ export function ResultsPanel({ inputs, results, diagrams, onDeflLimitsChange }: 
         results,
         bmd: diagrams.factored,
         sfd: diagrams.factored,
-        deflectionGQ: diagrams.deflectionGQ,
+        deflectionGpsiLQ: diagrams.deflectionGpsiLQ,
         deflectionG: diagrams.deflectionG,
       });
     } catch (err) {
@@ -118,13 +122,13 @@ export function ResultsPanel({ inputs, results, diagrams, onDeflLimitsChange }: 
             <td className="text-center p-2 border">{statusCell(results.passes.shear)}</td>
           </tr>
           <tr>
-            <td className="p-2 border">Deflection (G+Q)</td>
-            <td className="text-right p-2 border">{results.deflectionGQ.toFixed(2)} mm</td>
-            <td className="text-right p-2 border">{results.deflectionLimitGQ.toFixed(2)} mm</td>
+            <td className="p-2 border">Deflection ({deflLabel})</td>
+            <td className="text-right p-2 border">{results.deflectionGpsiLQ.toFixed(2)} mm</td>
+            <td className="text-right p-2 border">{results.deflectionLimitGpsiLQ.toFixed(2)} mm</td>
             <td className="text-right p-2 border">
-              {utilCell(results.deflectionGQ / results.deflectionLimitGQ)}
+              {utilCell(results.deflectionGpsiLQ / results.deflectionLimitGpsiLQ)}
             </td>
-            <td className="text-center p-2 border">{statusCell(results.passes.deflectionGQ)}</td>
+            <td className="text-center p-2 border">{statusCell(results.passes.deflectionGpsiLQ)}</td>
           </tr>
           <tr>
             <td className="p-2 border">Deflection (G)</td>
@@ -275,9 +279,9 @@ export function ResultsPanel({ inputs, results, diagrams, onDeflLimitsChange }: 
               <Legend />
               <ReferenceLine y={0} stroke="#000" />
               <ReferenceLine
-                y={results.deflectionLimitGQ}
+                y={results.deflectionLimitGpsiLQ}
                 ifOverflow="extendDomain"
-                stroke={results.passes.deflectionGQ ? '#16a34a' : '#dc2626'}
+                stroke={results.passes.deflectionGpsiLQ ? '#16a34a' : '#dc2626'}
                 strokeDasharray="4 2"
                 label={{ value: `L/${inputs.deflLimits.GQ}`, position: 'insideTopRight', fontSize: 10 }}
               />
@@ -288,7 +292,7 @@ export function ResultsPanel({ inputs, results, diagrams, onDeflLimitsChange }: 
                 strokeDasharray="2 4"
                 label={{ value: `L/${inputs.deflLimits.G}`, position: 'insideBottomRight', fontSize: 10 }}
               />
-              <Line type="monotone" dataKey="deltaGQ" stroke="#2563eb" name="G+Q" dot={false} />
+              <Line type="monotone" dataKey="deltaGpsiLQ" stroke="#2563eb" name={deflLabel} dot={false} />
               <Line type="monotone" dataKey="deltaG" stroke="#9ca3af" name="G" strokeDasharray="4 2" dot={false} />
             </LineChart>
           </ResponsiveContainer>
