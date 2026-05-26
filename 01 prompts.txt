@@ -13,7 +13,7 @@ The design will need to be in accordance with all relevant Australian standards 
 
 The design will also need to check for the elements deflection from dead + live load combination and dead load (including self weight) only. Both results are to be within acceptable limits to be in accordance with the steel design handbook or other relevant guidelines.
 
-__
+__ Phase 2
 
 
 1. remove leading zero when manually entering a variable to all input fields "C:\Users\socoo\.projects\01 Steel Beam\.Improvements\Rev 2\1.jpg"
@@ -23,3 +23,11 @@ __
 5. Ensure the capacity lines for the moment and deflection graphs are always displayed. "C:\Users\socoo\.projects\01 Steel Beam\.Improvements\Rev 2\5.jpg"
 6. Modify the restrains input option to be a total number of restraints for the nominated span and divided equally. "C:\Users\socoo\.projects\01 Steel Beam\.Improvements\Rev 2\6.jpg"
 7. auto update line load and area load end dimension to match the current span length inputted.
+
+__ Phase 3
+
+1. With the output deflection checks, change the G+Q combination to G+ylQ (dead + long term factored live load) according to AS1170. Where the loads are inputted add a section to confirm the live load type. i.e storage and have the corresponding factor used in the deflection check.
+2. in the load input section, with regards to the point loading. change the load location from a distance to % of span. i.e. 50% is half of the nominated span.
+3. With regards to the PDF export page, there is output text that is overlapping with other text. please correct this.
+4. With regards to the PDF export page, have the graphs display the same as within the main app output page.
+5. With regards to the pdf export page, can you add a section after the current output that summarises the design calculations performed and each calc notes the corresponding Australian standard clause it complies with. i.e. calc - [AS4100 6.6.1]

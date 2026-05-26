@@ -208,3 +208,26 @@ Evidence screenshots: `.nova/evidence/rev2-integration-full.png`, `rev2-bmd-refl
   branch); not extracted from a generated PDF file. Visually confirmable via "Export PDF Report".
 - ResultsPanel deflection-limit inputs (span/300, span/360) were left out of the leading-zero fix —
   they are outside HANDOVER item #1's stated scope (Geometry/Load/Restraint panels only).
+
+---
+
+## 2026-05-26 — Phase 3 (Rev 3) requirements received
+
+Captured in `01 prompts.txt` (Phase 3) with reference images in `.Improvements/Rev 3/`
+(1–4.jpg). **Not yet implemented** — recorded here for planning. Five items:
+
+1. **Deflection combination** — change the G+Q deflection check to G+ψ_l·Q (dead + long-term
+   factored live load) per AS1170. At the load input, add a way to confirm the live-load *type*
+   (e.g. storage) so the corresponding ψ_l (long-term) factor is applied in the deflection check.
+2. **Point-load location as % of span** — change point-load position input from an absolute
+   distance (m) to a percentage of span (e.g. 50% = midspan).
+3. **PDF export — overlapping text** — fix output text that overlaps other text on the report.
+4. **PDF export — graphs** — make the PDF graphs match the main-app output charts (currently the
+   PDF uses a separate vector-draw routine in `pdfExport.ts`).
+5. **PDF export — calc summary** — add a section after the current output summarising the design
+   calculations performed, each annotated with the AS clause it complies with (e.g. `[AS4100 6.6.1]`).
+
+Notes for when this is planned: items 1–2 touch the engineering/types layer (live-load category +
+ψ_l factor; position-as-% conversion), unlike Rev 2 which was UI-only. Items 3–5 are all in
+`src/utils/pdfExport.ts`; item 4 likely needs chart rendering (e.g. render the Recharts SVG or
+an html2canvas capture) rather than the current manual jsPDF line-drawing.
