@@ -5,6 +5,8 @@ export interface ShearResult {
   Vv: number;
   phiVv: number;
   webSlender: boolean;
+  dOnTw: number;
+  slenderLimit: number;
 }
 
 /**
@@ -45,5 +47,5 @@ export function calcShearCapacity(section: SteelSection, fy: number): ShearResul
 
   const phiVv = (0.9 * Vv) / 1000; // kN
 
-  return { Aw, Vv, phiVv, webSlender };
+  return { Aw, Vv, phiVv, webSlender, dOnTw, slenderLimit };
 }

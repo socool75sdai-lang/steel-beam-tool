@@ -1,4 +1,4 @@
-import type { DesignInputs, CapacityResults, DiagramSet } from '@/types';
+import type { DesignInputs, CapacityResults, DiagramSet, DesignIntermediates } from '@/types';
 import { COMBOS, analyseBeam } from '@/engineering/as1170/loadCombinations';
 import { calcFy } from '@/engineering/sections/sectionUtils';
 import {
@@ -11,7 +11,7 @@ import {
   calcEffectiveLength,
   calcAlphaM,
 } from '@/engineering/as4100/effectiveLength';
-import { getPsiL } from '@/engineering/as1170/psiFactors';
+import { getPsiL, LIVE_LOAD_LABELS } from '@/engineering/as1170/psiFactors';
 
 export interface EvaluationResult {
   results: CapacityResults;
@@ -46,6 +46,40 @@ export function evaluateDesign(inputs: DesignInputs): EvaluationResult {
   const overall =
     sectionMoment && memberMoment && shearPass && deflectionGpsiLQ && deflectionG;
 
+  const intermediates: DesignIntermediates = {
+    fy,
+    flangeLambda: secCap.flangeLambda,
+    flangeEp: secCap.flangeEp,
+    flangeEy: secCap.flangeEy,
+    webLambda: secCap.webLambda,
+    webEp: secCap.webEp,
+    webEy: secCap.webEy,
+    sectionClass: secCap.sectionClass,
+    Ze: secCap.Ze,
+    Msx: secCap.Msx,
+    phiMs: secCap.phiMs,
+    Le: Le_m,
+    Moa: memCap.Moa,
+    alphaM,
+    alphaS: memCap.alphaS,
+    phiMbx: memCap.phiMbx,
+    Aw: shear.Aw,
+    dOnTw: shear.dOnTw,
+    slenderLimit: shear.slenderLimit,
+    webSlender: shear.webSlender,
+    Vv: shear.Vv,
+    phiVv: shear.phiVv,
+    Mmax: factored.Mmax,
+    Vmax: factored.Vmax,
+    governingCombo: '1.2G+1.5Q',
+    psiL,
+    liveLoadTypeLabel: LIVE_LOAD_LABELS[inputs.liveLoadType],
+    deflectionGpsiLQ: deflGpsiLQ,
+    deflectionG: deflG,
+    deflectionLimitGpsiLQ: deflLimitGpsiLQ,
+    deflectionLimitG: deflLimitG,
+  };
+
   const results: CapacityResults = {
     Mmax: factored.Mmax,
     Vmax: factored.Vmax,
@@ -70,6 +104,7 @@ export function evaluateDesign(inputs: DesignInputs): EvaluationResult {
       deflectionG,
       overall,
     },
+    intermediates,
   };
 
   const diagrams: DiagramSet = {

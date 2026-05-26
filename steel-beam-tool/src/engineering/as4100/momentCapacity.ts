@@ -6,7 +6,11 @@ const PHI = 0.9;
 
 export interface ClassificationResult {
   flangeLambda: number;
+  flangeEp: number;
+  flangeEy: number;
   webLambda: number;
+  webEp: number;
+  webEy: number;
   sectionClass: SectionClass;
   Ze: number;
 }
@@ -16,6 +20,12 @@ export interface SectionCapacityResult {
   Msx: number;        // N·mm
   phiMs: number;      // kN·m
   sectionClass: SectionClass;
+  flangeLambda: number;
+  flangeEp: number;
+  flangeEy: number;
+  webLambda: number;
+  webEp: number;
+  webEy: number;
 }
 
 export interface MemberCapacityResult {
@@ -128,14 +138,26 @@ export function classifySection(section: SteelSection, fy: number): Classificati
 
   const Ze = computeZe(sectionClass, critical, Sx, Zx);
 
-  return { flangeLambda, webLambda, sectionClass, Ze };
+  return { flangeLambda, flangeEp, flangeEy, webLambda, webEp, webEy, sectionClass, Ze };
 }
 
 export function calcSectionCapacity(section: SteelSection, fy: number): SectionCapacityResult {
-  const { Ze, sectionClass } = classifySection(section, fy);
+  const c = classifySection(section, fy);
+  const { Ze, sectionClass } = c;
   const Msx = Ze * fy;             // N·mm
   const phiMs = PHI * Msx / 1e6;   // kN·m
-  return { Ze, Msx, phiMs, sectionClass };
+  return {
+    Ze,
+    Msx,
+    phiMs,
+    sectionClass,
+    flangeLambda: c.flangeLambda,
+    flangeEp: c.flangeEp,
+    flangeEy: c.flangeEy,
+    webLambda: c.webLambda,
+    webEp: c.webEp,
+    webEy: c.webEy,
+  };
 }
 
 export function calcMemberCapacity(

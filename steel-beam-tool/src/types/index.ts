@@ -95,6 +95,40 @@ export interface DeflectionProfilePoint {
   delta: number; // mm, positive = downward
 }
 
+export interface DesignIntermediates {
+  fy: number;
+  flangeLambda: number;
+  flangeEp: number;
+  flangeEy: number;
+  webLambda: number;
+  webEp: number;
+  webEy: number;
+  sectionClass: SectionClass;
+  Ze: number;
+  Msx: number;
+  phiMs: number;
+  Le: number;
+  Moa: number;
+  alphaM: number;
+  alphaS: number;
+  phiMbx: number;
+  Aw: number;
+  dOnTw: number;
+  slenderLimit: number;
+  webSlender: boolean;
+  Vv: number;
+  phiVv: number;
+  Mmax: number;
+  Vmax: number;
+  governingCombo: string;
+  psiL: number;
+  liveLoadTypeLabel: string;
+  deflectionGpsiLQ: number;
+  deflectionG: number;
+  deflectionLimitGpsiLQ: number;
+  deflectionLimitG: number;
+}
+
 export interface CapacityResults {
   Mmax: number;
   Vmax: number;
@@ -119,6 +153,7 @@ export interface CapacityResults {
     deflectionG: boolean;
     overall: boolean;
   };
+  intermediates: DesignIntermediates;
 }
 
 export interface DiagramSet {

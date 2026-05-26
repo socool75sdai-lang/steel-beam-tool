@@ -444,6 +444,121 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
     'Deflection Profile (mm)',
   );
 
+  // ===== Calculation Sheet (page 3+) =====
+  doc.addPage();
+  const im = results.intermediates;
+  const calcLineH = 5;
+  let cy = 20;
+
+  const classLabel: Record<string, string> = {
+    compact: 'Compact',
+    noncompact: 'Non-compact',
+    slender: 'Slender',
+  };
+  const classOf = (lam: number, ep: number, ey: number): string =>
+    lam <= ep ? 'Compact' : lam <= ey ? 'Non-compact' : 'Slender';
+
+  const calcPageHeader = (cont: boolean): void => {
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text(
+      cont
+        ? 'McVeigh Steel Designer - Calculation Sheet (cont.)'
+        : 'McVeigh Steel Designer - Calculation Sheet',
+      10,
+      cy,
+    );
+    doc.setTextColor(0, 0, 0);
+    cy += 8;
+  };
+
+  const checkOverflow = (): void => {
+    if (cy > 270) {
+      doc.addPage();
+      cy = 20;
+      calcPageHeader(true);
+    }
+  };
+
+  const calcStep = (title: string, clause: string, lines: string[]): void => {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(0, 0, 0);
+    doc.text(title, 10, cy);
+    doc.setFont('helvetica', 'normal');
+    doc.text(clause, 200, cy, { align: 'right' });
+    cy += calcLineH;
+    for (const ln of lines) {
+      const wrapped = doc.splitTextToSize(ln, 186) as string[];
+      for (const w of wrapped) {
+        doc.text(w, 14, cy);
+        cy += calcLineH;
+      }
+    }
+    doc.setDrawColor(210, 210, 210);
+    doc.setLineWidth(0.2);
+    doc.line(10, cy, 200, cy);
+    cy += 3;
+    checkOverflow();
+  };
+
+  calcPageHeader(false);
+
+  const moaStr = Number.isFinite(im.Moa) ? `${(im.Moa / 1e6).toFixed(1)} kN.m` : 'n/a';
+  const flangeCmp = im.flangeLambda <= im.flangeEp ? '<=' : '>';
+  const webCmp = im.webLambda <= im.webEp ? '<=' : '>';
+  const shearCmp = im.webSlender ? '>' : '<=';
+
+  calcStep('1. Material Properties', '[AS4100 Cl. 2.1]', [
+    `fy = ${im.fy.toFixed(0)} MPa   (tf = ${s.tf.toFixed(1)} mm)`,
+  ]);
+  calcStep('2. Section Classification - Flange', '[AS4100 Cl. 5.2.2]', [
+    `lambda_f = (bf / 2tf) x sqrt(fy/250) = ${im.flangeLambda.toFixed(2)}`,
+    `Compact limit lambda_ep = ${im.flangeEp}  ->  lambda_f ${flangeCmp} lambda_ep  ->  Flange: ${classOf(im.flangeLambda, im.flangeEp, im.flangeEy)}`,
+  ]);
+  calcStep('3. Section Classification - Web', '[AS4100 Cl. 5.2.2]', [
+    `lambda_w = (d - 2tf)/tw x sqrt(fy/250) = ${im.webLambda.toFixed(2)}`,
+    `Compact limit lambda_ep = ${im.webEp}  ->  lambda_w ${webCmp} lambda_ep  ->  Web: ${classOf(im.webLambda, im.webEp, im.webEy)}`,
+    `Overall section class: ${classLabel[im.sectionClass] ?? im.sectionClass}`,
+  ]);
+  calcStep('4. Effective Section Modulus', '[AS4100 Cl. 5.2.3]', [
+    `Ze = ${fmtExp(im.Ze)} mm^3   (per ${classLabel[im.sectionClass] ?? im.sectionClass} section)`,
+  ]);
+  calcStep('5. Section Moment Capacity', '[AS4100 Cl. 5.1]', [
+    `Msx = Ze x fy = ${fmtExp(im.Ze)} x ${im.fy.toFixed(0)} = ${fmtExp(im.Msx)} N.mm`,
+    `phiMs = 0.9 x Msx / 1e6 = ${im.phiMs.toFixed(1)} kN.m`,
+  ]);
+  calcStep('6. Effective Length', '[AS4100 Cl. 5.6.3]', [
+    `Le = ${im.Le.toFixed(2)} m`,
+  ]);
+  calcStep('7. Reference Buckling Moment', '[AS4100 Cl. 5.6.1.1]', [
+    `Moa = (pi/Le) x sqrt(E.Iy x (G.J + pi^2.E.Iw/Le^2)) = ${moaStr}`,
+  ]);
+  calcStep('8. Member Slenderness Reduction', '[AS4100 Cl. 5.6.1]', [
+    `alpha_m = ${im.alphaM.toFixed(2)}   (moment distribution factor)`,
+    `alpha_s = 0.6 x (sqrt((Msx/Moa)^2 + 3) - Msx/Moa) = ${im.alphaS.toFixed(3)}`,
+  ]);
+  calcStep('9. Member Moment Capacity', '[AS4100 Cl. 5.6]', [
+    `phiMbx = min(0.9 x alpha_m x alpha_s x Msx, phiMs) = ${im.phiMbx.toFixed(1)} kN.m`,
+  ]);
+  calcStep('10. Shear Capacity', '[AS4100 Cl. 5.11.4]', [
+    `Aw = ${im.Aw.toFixed(0)} mm^2`,
+    `d/tw = ${im.dOnTw.toFixed(1)} ${shearCmp} 82.sqrt(250/fy) = ${im.slenderLimit.toFixed(1)}  ->  ${im.webSlender ? 'web slender (Vv reduced)' : 'no web slenderness reduction'}`,
+    `phiVv = 0.9 x 0.6 x fy x Aw / 1000 = ${im.phiVv.toFixed(1)} kN`,
+  ]);
+  calcStep('11. Load Combinations', '[AS1170.0 Cl. 4.2.2]', [
+    `ULS governing: ${im.governingCombo}  ->  Mmax = ${im.Mmax.toFixed(1)} kN.m, Vmax = ${im.Vmax.toFixed(1)} kN`,
+    `SLS combo: G + psi_l x Q   (psi_l = ${im.psiL}, ${im.liveLoadTypeLabel})`,
+  ]);
+  calcStep('12. Deflection Check - G+psi_l.Q', '[AS1170.1 Cl. 4 / AS4100 Cl. 1.5.3]', [
+    `Live load type: ${im.liveLoadTypeLabel}  ->  psi_l = ${im.psiL}`,
+    `delta = ${im.deflectionGpsiLQ.toFixed(1)} mm <= L/${inputs.deflLimits.GQ} = ${im.deflectionLimitGpsiLQ.toFixed(1)} mm  ->  ${results.passes.deflectionGpsiLQ ? 'PASS' : 'FAIL'}`,
+  ]);
+  calcStep('13. Deflection Check - G only', '[AS4100 Cl. 1.5.3]', [
+    `delta = ${im.deflectionG.toFixed(1)} mm <= L/${inputs.deflLimits.G} = ${im.deflectionLimitG.toFixed(1)} mm  ->  ${results.passes.deflectionG ? 'PASS' : 'FAIL'}`,
+  ]);
+
   // ===== Save =====
   doc.save(`steel-beam-design-${new Date().toISOString().slice(0, 10)}.pdf`);
 }
