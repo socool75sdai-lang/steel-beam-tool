@@ -40,7 +40,17 @@ export default function App() {
   }, [theme]);
 
   const handleChange = (patch: Partial<DesignInputs>) =>
-    setInputs(prev => ({ ...prev, ...patch }));
+    setInputs(prev => {
+      const next = { ...prev, ...patch };
+      if (patch.span !== undefined) {
+        next.loads = {
+          ...next.loads,
+          line: next.loads.line.map(l => ({ ...l, end: patch.span! })),
+          area: next.loads.area.map(a => ({ ...a, end: patch.span! })),
+        };
+      }
+      return next;
+    });
 
   const handleDeflLimits = (deflLimits: DeflLimits) =>
     setInputs(prev => ({ ...prev, deflLimits }));
@@ -52,16 +62,11 @@ export default function App() {
         className="w-full px-6 py-3 flex items-center justify-between"
       >
         <h1 style={{ color: 'var(--mc-gold)' }} className="text-lg font-bold tracking-wide">
-          Steel Beam Design Tool
+          McVeigh Steel Designer
         </h1>
 
         <div className="flex items-center gap-4">
-          {/* SVG placeholder wordmark — swap for /logo.svg later */}
-          <svg width="160" height="32" viewBox="0 0 160 32" xmlns="http://www.w3.org/2000/svg">
-            <text x="0" y="22" fontFamily="serif" fontSize="14" fontWeight="bold" fill="#C4A962">
-              McVeigh Consultants
-            </text>
-          </svg>
+          <img src="/logo.jpg" alt="McVeigh Consultants" className="h-10 w-auto" />
 
           <select
             value={theme}
@@ -74,6 +79,18 @@ export default function App() {
           </select>
         </div>
       </header>
+
+      <nav
+        style={{ backgroundColor: 'var(--mc-green-mid)', borderBottom: '2px solid var(--mc-gold)' }}
+        className="px-4 flex"
+      >
+        <button
+          style={{ color: 'var(--mc-gold)', borderBottom: '2px solid var(--mc-gold)' }}
+          className="px-4 py-2 text-sm font-medium -mb-px"
+        >
+          Steel Beam
+        </button>
+      </nav>
 
       <div className="flex flex-1 overflow-hidden bg-gray-50">
         <div className="w-2/5 overflow-y-auto p-4 border-r border-gray-300">

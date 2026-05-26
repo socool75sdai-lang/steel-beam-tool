@@ -170,7 +170,7 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(245, 240, 232); // --mc-cream
-  doc.text('Steel Beam Design Report', 10, 18);
+  doc.text('McVeigh Steel Designer', 10, 18);
 
   doc.setFontSize(9);
   doc.text(new Date().toLocaleDateString(), 170, 12);

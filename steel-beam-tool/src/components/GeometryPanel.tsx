@@ -55,6 +55,11 @@ export function GeometryPanel({ inputs, onChange }: GeometryPanelProps) {
             step={0.1}
             value={inputs.span}
             onChange={(e) => onChange({ span: parseFloat(e.target.value) || 0 })}
+            onBlur={(e) => {
+              const v = parseFloat(e.target.value) || 0;
+              onChange({ span: v });
+              e.target.value = String(v);
+            }}
             className="mt-1 w-full border border-gray-300 rounded px-2 py-1"
           />
           {inputs.span <= 0 && (
@@ -72,6 +77,11 @@ export function GeometryPanel({ inputs, onChange }: GeometryPanelProps) {
             onChange={(e) =>
               onChange({ tributaryWidth: parseFloat(e.target.value) || 0 })
             }
+            onBlur={(e) => {
+              const v = parseFloat(e.target.value) || 0;
+              onChange({ tributaryWidth: v });
+              e.target.value = String(v);
+            }}
             className="mt-1 w-full border border-gray-300 rounded px-2 py-1"
           />
           {inputs.tributaryWidth <= 0 && (

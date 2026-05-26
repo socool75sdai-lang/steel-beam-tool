@@ -196,12 +196,14 @@ export function ResultsPanel({ inputs, results, diagrams, onDeflLimitsChange }: 
               <ReferenceLine y={0} stroke="#000" />
               <ReferenceLine
                 y={results.phiMbx}
+                ifOverflow="extendDomain"
                 stroke={results.passes.memberMoment ? '#16a34a' : '#dc2626'}
                 strokeWidth={1.5}
                 label={{ value: 'φMbx', position: 'insideTopRight', fontSize: 10 }}
               />
               <ReferenceLine
                 y={results.phiMs}
+                ifOverflow="extendDomain"
                 stroke={results.passes.sectionMoment ? '#16a34a' : '#dc2626'}
                 strokeDasharray="4 2"
                 strokeWidth={1}
@@ -233,12 +235,14 @@ export function ResultsPanel({ inputs, results, diagrams, onDeflLimitsChange }: 
               <ReferenceLine y={0} stroke="#000" />
               <ReferenceLine
                 y={results.phiVv}
+                ifOverflow="extendDomain"
                 stroke={results.passes.shear ? '#16a34a' : '#dc2626'}
                 strokeWidth={1.5}
                 label={{ value: 'φVv', position: 'insideTopRight', fontSize: 10 }}
               />
               <ReferenceLine
                 y={-results.phiVv}
+                ifOverflow="extendDomain"
                 stroke={results.passes.shear ? '#16a34a' : '#dc2626'}
                 strokeWidth={1.5}
                 label={{ value: '-φVv', position: 'insideBottomRight', fontSize: 10 }}
@@ -272,12 +276,14 @@ export function ResultsPanel({ inputs, results, diagrams, onDeflLimitsChange }: 
               <ReferenceLine y={0} stroke="#000" />
               <ReferenceLine
                 y={results.deflectionLimitGQ}
+                ifOverflow="extendDomain"
                 stroke={results.passes.deflectionGQ ? '#16a34a' : '#dc2626'}
                 strokeDasharray="4 2"
                 label={{ value: `L/${inputs.deflLimits.GQ}`, position: 'insideTopRight', fontSize: 10 }}
               />
               <ReferenceLine
                 y={results.deflectionLimitG}
+                ifOverflow="extendDomain"
                 stroke={results.passes.deflectionG ? '#16a34a' : '#dc2626'}
                 strokeDasharray="2 4"
                 label={{ value: `L/${inputs.deflLimits.G}`, position: 'insideBottomRight', fontSize: 10 }}

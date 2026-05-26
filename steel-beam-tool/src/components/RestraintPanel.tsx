@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import type { DesignInputs, SimpleRestraint, EndRestraint, RestraintMode } from '@/types';
 
 interface RestraintPanelProps {
@@ -27,14 +28,15 @@ export function RestraintPanel({ inputs, onChange }: RestraintPanelProps) {
     onChange({ restraint: { ...r, ...patch } });
   };
 
-  const addIntermediate = () =>
-    updateRestraint({ intermediate: [...r.intermediate, inputs.span / 2] });
-  const updateInterm = (i: number, v: number) =>
-    updateRestraint({
-      intermediate: r.intermediate.map((x, idx) => (idx === i ? v : x)),
-    });
-  const removeInterm = (i: number) =>
-    updateRestraint({ intermediate: r.intermediate.filter((_, idx) => idx !== i) });
+  const [intermediateCount, setIntermediateCount] = useState(0);
+
+  const computedPositions = Array.from({ length: intermediateCount }, (_, i) =>
+    parseFloat(((inputs.span / (intermediateCount + 1)) * (i + 1)).toFixed(3)),
+  );
+
+  useEffect(() => {
+    updateRestraint({ intermediate: computedPositions });
+  }, [intermediateCount, inputs.span]);
 
   return (
     <section className="border rounded p-4 mb-4 bg-white shadow-sm mc-panel">
@@ -80,6 +82,11 @@ export function RestraintPanel({ inputs, onChange }: RestraintPanelProps) {
                   onChange={(e) =>
                     updateRestraint({ leMultiplier: parseFloat(e.target.value) || 1 })
                   }
+                  onBlur={(e) => {
+                    const v = parseFloat(e.target.value) || 1;
+                    updateRestraint({ leMultiplier: v });
+                    e.target.value = String(v);
+                  }}
                   className="ml-2 w-24 border rounded px-2 py-1"
                 />
               </label>
@@ -126,36 +133,25 @@ export function RestraintPanel({ inputs, onChange }: RestraintPanelProps) {
           </div>
 
           <div className="mt-3">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="font-medium text-sm">
-                Intermediate restraints (positions in m)
-              </h3>
-              <button
-                onClick={addIntermediate}
-                className="bg-blue-500 text-white text-sm rounded px-3 py-1 mc-btn-primary"
-              >
-                + Add
-              </button>
-            </div>
-            {r.intermediate.map((pos, idx) => (
-              <div key={idx} className="flex gap-2 items-center mb-1">
-                <input
-                  type="number"
-                  step={0.1}
-                  value={pos}
-                  onChange={(e) =>
-                    updateInterm(idx, parseFloat(e.target.value) || 0)
-                  }
-                  className="flex-1 border rounded px-2 py-1"
-                />
-                <button
-                  onClick={() => removeInterm(idx)}
-                  className="text-red-600 text-sm"
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
+            <label className="text-sm font-medium">Number of intermediate restraints</label>
+            <input
+              type="number"
+              min={0}
+              step={1}
+              value={intermediateCount}
+              onChange={(e) => setIntermediateCount(Math.max(0, parseInt(e.target.value) || 0))}
+              onBlur={(e) => {
+                const v = Math.max(0, parseInt(e.target.value) || 0);
+                setIntermediateCount(v);
+                e.target.value = String(v);
+              }}
+              className="mt-1 w-24 border rounded px-2 py-1"
+            />
+            {intermediateCount > 0 && (
+              <p className="text-xs mt-1 text-gray-500">
+                Positions: {computedPositions.map((p) => `${p.toFixed(2)} m`).join(', ')}
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -179,6 +175,11 @@ export function RestraintPanel({ inputs, onChange }: RestraintPanelProps) {
             onChange={(e) =>
               updateRestraint({ alphaMOverride: parseFloat(e.target.value) || 1.0 })
             }
+            onBlur={(e) => {
+              const v = parseFloat(e.target.value) || 1.0;
+              updateRestraint({ alphaMOverride: v });
+              e.target.value = String(v);
+            }}
             className="mt-2 w-24 border rounded px-2 py-1"
           />
         )}

@@ -12,3 +12,14 @@ The forth is the results page which will provide a design outcome.
 The design will need to be in accordance with all relevant Australian standards such as AS1170 and AS4100.
 
 The design will also need to check for the elements deflection from dead + live load combination and dead load (including self weight) only. Both results are to be within acceptable limits to be in accordance with the steel design handbook or other relevant guidelines.
+
+__
+
+
+1. remove leading zero when manually entering a variable to all input fields "C:\Users\socoo\.projects\01 Steel Beam\.Improvements\Rev 2\1.jpg"
+2. update the McVeigh logo as per new provided link "C:\Users\socoo\.projects\01 Steel Beam\.Improvements\Rev 2\2.jpg"
+3. call the app McVeigh Steel Designer
+4. Label the current tab/page - Steel Beam
+5. Ensure the capacity lines for the moment and deflection graphs are always displayed. "C:\Users\socoo\.projects\01 Steel Beam\.Improvements\Rev 2\5.jpg"
+6. Modify the restrains input option to be a total number of restraints for the nominated span and divided equally. "C:\Users\socoo\.projects\01 Steel Beam\.Improvements\Rev 2\6.jpg"
+7. auto update line load and area load end dimension to match the current span length inputted.

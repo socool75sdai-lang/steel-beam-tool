@@ -120,6 +120,11 @@ export function LoadPanel({ inputs, onChange }: LoadPanelProps) {
                 onChange={(e) =>
                   updatePoint(p.id, { magnitude: parseFloat(e.target.value) || 0 })
                 }
+                onBlur={(e) => {
+                  const v = parseFloat(e.target.value) || 0;
+                  updatePoint(p.id, { magnitude: v });
+                  e.target.value = String(v);
+                }}
                 placeholder="kN"
               />
               <div className="col-span-3">
@@ -131,6 +136,11 @@ export function LoadPanel({ inputs, onChange }: LoadPanelProps) {
                   onChange={(e) =>
                     updatePoint(p.id, { position: parseFloat(e.target.value) || 0 })
                   }
+                  onBlur={(e) => {
+                    const v = parseFloat(e.target.value) || 0;
+                    updatePoint(p.id, { position: v });
+                    e.target.value = String(v);
+                  }}
                   placeholder="position (m)"
                 />
                 {posInvalid && (
@@ -198,6 +208,11 @@ export function LoadPanel({ inputs, onChange }: LoadPanelProps) {
                 onChange={(e) =>
                   updateLine(l.id, { magnitude: parseFloat(e.target.value) || 0 })
                 }
+                onBlur={(e) => {
+                  const v = parseFloat(e.target.value) || 0;
+                  updateLine(l.id, { magnitude: v });
+                  e.target.value = String(v);
+                }}
                 placeholder="kN/m"
               />
               <input
@@ -208,6 +223,11 @@ export function LoadPanel({ inputs, onChange }: LoadPanelProps) {
                 onChange={(e) =>
                   updateLine(l.id, { start: parseFloat(e.target.value) || 0 })
                 }
+                onBlur={(e) => {
+                  const v = parseFloat(e.target.value) || 0;
+                  updateLine(l.id, { start: v });
+                  e.target.value = String(v);
+                }}
                 placeholder="start (m)"
               />
               <div className="col-span-2">
@@ -219,6 +239,11 @@ export function LoadPanel({ inputs, onChange }: LoadPanelProps) {
                   onChange={(e) =>
                     updateLine(l.id, { end: parseFloat(e.target.value) || 0 })
                   }
+                  onBlur={(e) => {
+                    const v = parseFloat(e.target.value) || 0;
+                    updateLine(l.id, { end: v });
+                    e.target.value = String(v);
+                  }}
                   placeholder="end (m)"
                 />
                 {rangeInvalid && (
@@ -290,6 +315,11 @@ export function LoadPanel({ inputs, onChange }: LoadPanelProps) {
                 onChange={(e) =>
                   updateArea(a.id, { magnitude: parseFloat(e.target.value) || 0 })
                 }
+                onBlur={(e) => {
+                  const v = parseFloat(e.target.value) || 0;
+                  updateArea(a.id, { magnitude: v });
+                  e.target.value = String(v);
+                }}
                 placeholder="kPa"
               />
               <input
@@ -300,6 +330,11 @@ export function LoadPanel({ inputs, onChange }: LoadPanelProps) {
                 onChange={(e) =>
                   updateArea(a.id, { start: parseFloat(e.target.value) || 0 })
                 }
+                onBlur={(e) => {
+                  const v = parseFloat(e.target.value) || 0;
+                  updateArea(a.id, { start: v });
+                  e.target.value = String(v);
+                }}
                 placeholder="start (m)"
               />
               <div className="col-span-2">
@@ -311,6 +346,11 @@ export function LoadPanel({ inputs, onChange }: LoadPanelProps) {
                   onChange={(e) =>
                     updateArea(a.id, { end: parseFloat(e.target.value) || 0 })
                   }
+                  onBlur={(e) => {
+                    const v = parseFloat(e.target.value) || 0;
+                    updateArea(a.id, { end: v });
+                    e.target.value = String(v);
+                  }}
                   placeholder="end (m)"
                 />
                 {rangeInvalid && (

@@ -60,4 +60,151 @@ Started as a background process; accessible at http://localhost:5173 during the 
 
 ---
 
-*Journal entries will be added here as work progresses.*
+## 2026-05-25 — UX Issue: Load Panel Input Fields Lack Labels
+
+### Issue
+The Line Loads, Area Loads, and Point Loads rows in the Loads panel have no column headers or placeholder text on the individual input fields. Users cannot tell which field is magnitude, start position, or end position without prior knowledge of the code.
+
+### Resolution — COMPLETE
+Column headers and placeholder text added to all load type rows in `LoadPanel.tsx`:
+- Point Loads: "Magnitude (kN)", "Position (m)", "Category"
+- Line Loads: "Mag. (kN/m)", "Start (m)", "End (m)", "Category"
+- Area Loads: "Mag. (kPa)", "Start (m)", "End (m)", "Category"
+Each input also carries a matching `placeholder` attribute.
+
+---
+
+## 2026-05-25 — Enhancement: Capacity Reference Lines on BMD/SFD Charts
+
+### Request
+Add horizontal reference lines to the BMD and SFD charts showing the current section's design capacity, so the engineer can visually see how close the demand curves are to the limit.
+
+### Resolution — COMPLETE
+Recharts `<ReferenceLine>` components added to `ResultsPanel.tsx`:
+- **BMD chart** — φMbx and φMs lines, colour-coded green (pass) / red (fail), with value labels.
+- **SFD chart** — +φVv and −φVv lines with matching colour coding.
+Lines update live with section and load changes.
+
+---
+
+## 2026-05-25 — Bug: Auto-select Lightest Button Not Working
+
+### Observed behaviour
+Clicking "Auto-select lightest" in the Geometry panel had no visible effect. The code silently did nothing when `autoSelectSection` returned `null`.
+
+### Resolution — COMPLETE
+User-facing feedback added to `GeometryPanel.tsx` via an `autoSelectMsg` state variable displayed below the button. Three outcomes handled:
+- No passing section found: "No passing section found in {type} — try reducing loads or changing section type." (red)
+- Already optimal: "{designation} is already the lightest passing {type}." (green)
+- New selection made: "Selected {designation} — lightest passing {type}." (green)
+
+---
+
+## 2026-05-25 — Enhancement: Deflection Diagram as Third Chart
+
+### Request
+Add a third chart below BMD and SFD showing the elastic deflection profile, with L/300 and L/360 limit lines.
+
+### Resolution — COMPLETE
+- `deflection.ts` — new export `calcDeflectionProfile(inputs, combo)` returns 81-point `DeflectionProfilePoint[]` array.
+- `types/index.ts` — `DeflectionProfilePoint` interface added; `DiagramSet` extended with `deflectionGQ` and `deflectionG` arrays.
+- `evaluate.ts` — calls `calcDeflectionProfile` for both G+Q and G combos and populates `DiagramSet`.
+- `ResultsPanel.tsx` — third Recharts `LineChart` ("Deflection Profile (mm)") renders both combos with L/300 and L/360 limit reference lines, colour-coded by pass/fail.
+
+---
+
+## 2026-05-25 — Enhancement: McVeigh Consultants Branding & Theme System
+
+### Request
+Apply McVeigh Consultants branding with a theme switcher and logo in the header.
+
+### Resolution — PARTIAL
+Theme system infrastructure is complete:
+- `index.css` — McVeigh CSS custom property palette defined (`--mc-green-dark`, `--mc-green-mid`, `--mc-gold`, `--mc-gold-light`, `--mc-cream`) applied via `[data-theme="mcveigh"]` selectors.
+- `App.tsx` — full-width `<Header>` bar added with app title in gold and theme dropdown (McVeigh / Light) persisted to `localStorage`.
+- All panel components updated to use themed classes.
+
+**Outstanding:** Logo asset not yet in place. `App.tsx` contains an inline SVG placeholder with comment "swap for /logo.svg later". No `logo.svg` exists in `public/`. Awaiting logo file from client.
+
+---
+
+## 2026-05-25 — Enhancement: Add WB (Welded Beam) Section Type
+
+### Request
+Add Welded Beam (WB) sections to the section type dropdown.
+
+### Resolution — COMPLETE
+- `types/index.ts` — `'WB'` added to the `SectionType` union.
+- `sectionDatabase.ts` — WB array added with 13 sections (700WB115 through 1000WB322), sorted ascending by mass and included in `SECTION_DATABASE` export.
+- `sectionUtils.ts` — `'WB'` included in `getAllSectionTypes()`.
+No changes were needed to engineering calculation modules — WB sections are treated identically to UB for classification and LTB purposes.
+
+---
+
+## 2026-05-26 — Rev 2 Orchestration Executed (7 items)
+
+### Context
+Executed `.nova/REV2-ORCHESTRATION-PLAN.md`, which maps the 7 improvements in
+`.Improvements/Rev 2/HANDOVER.md` onto 5 implementation cards (R1–R5) + 1 integration card (I1).
+Kanban board and per-card files created under `.nova/` (`KANBAN.md`, `cards/R1.md`…`I1.md`).
+
+### Execution mode — deviation from worktree model
+The plan specified 5 parallel worktree branches with a serial Integrator merge. All 5 cards own
+completely disjoint files (zero conflicts), and a single agent did the work, so worktree isolation
++ merging would have been pure overhead. All changes were made directly on `main`. Every
+verification gate the plan defined was still run: `tsc --noEmit`, `npm run build`, and Playwright
+browser visual confirmation of each item.
+
+### Items completed
+| # | Item | Files | Result |
+|---|---|---|---|
+| 1 | Leading-zeros onBlur | GeometryPanel, LoadPanel, RestraintPanel | DONE (see deviation) |
+| 6 | Count-based intermediate restraint spacing | RestraintPanel | DONE |
+| 5 | Capacity reference lines always display | ResultsPanel | DONE |
+| 2 | McVeigh logo (replace SVG) | App.tsx, public/logo.jpg | DONE |
+| 3 | Rename h1 / `<title>` / PDF header | App.tsx, index.html, pdfExport.ts | DONE |
+| 4 | Tab bar below header | App.tsx | DONE |
+| 7 | Span-sync line/area load `end` | App.tsx | DONE |
+
+### Key finding — HANDOVER's leading-zero fix was insufficient (item #1)
+The prescribed pattern (add an onBlur that re-fires `onChange` with `parseFloat`) does **not**
+clear leading zeros in React 19. When the user types `010`, the onChange during typing already
+sets state to the number `10`; the onBlur re-firing `onChange({ span: 10 })` produces no
+value-prop change, so React skips reconciling the controlled input's DOM text and `010` persists.
+Caught in browser QA: the field displayed `010` while the span-derived `Le` readout correctly
+showed `10.00 m` (state was right, display was stale).
+
+**Fix applied:** onBlur now also imperatively normalizes the field —
+`e.target.value = String(parseFloat(e.target.value) || 0)` — after firing onChange. This cleans
+the display reliably (browser-confirmed `010` → `10`). onChange is unchanged so intermediate
+typing like `0.` still works. Applied to all in-scope numeric inputs in GeometryPanel (2),
+LoadPanel (8), RestraintPanel (3, incl. the new count input).
+
+### R3 note
+The reference lines were already rendered unconditionally (guarded only by the `results`/`diagrams`
+null check) — there was no pass/fail wrapper to remove, and the HANDOVER's example code referenced
+non-existent fields (`results.momentPass`). Added `ifOverflow="extendDomain"` to all six capacity
+lines so they're never clipped off the auto-scaled axis. Verified visible in an overstressed FAIL
+state.
+
+### Verification
+| Check | Result |
+|---|---|
+| `npx tsc --noEmit` | 0 errors |
+| `npm run build` | clean (791 modules; pre-existing chunk-size advisory only) |
+| Browser: leading-zero blur | `010` → `10` ✓ |
+| Browser: span-sync | span 10→12 updates line load End to 12 ✓ |
+| Browser: count-based restraints | span 12 count 3 → 3.00/6.00/9.00 m; count 0 hides; End A/B intact ✓ |
+| Browser: reference lines | φMbx/φMs, ±φVv, L/300/L/360 all visible (FAIL state) ✓ |
+| Browser: branding | logo image, "McVeigh Steel Designer" h1, "Steel Beam" tab, theme dropdown ✓ |
+| Browser: tab title | "Steel Designer" ✓ |
+| PDF header | string → "McVeigh Steel Designer" (code + build verified) |
+
+Evidence screenshots: `.nova/evidence/rev2-integration-full.png`, `rev2-bmd-reflines.png`,
+`rev2-charts-reflines.png`.
+
+### Not done / follow-ups
+- PDF report header verified by source inspection + successful build (static literal, no logic
+  branch); not extracted from a generated PDF file. Visually confirmable via "Export PDF Report".
+- ResultsPanel deflection-limit inputs (span/300, span/360) were left out of the leading-zero fix —
+  they are outside HANDOVER item #1's stated scope (Geometry/Load/Restraint panels only).
