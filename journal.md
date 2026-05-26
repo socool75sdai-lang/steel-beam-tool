@@ -322,5 +322,9 @@ Evidence in `.nova/evidence/rev3/` (3 screenshots + sample PDF).
   overflow guard is implemented exactly per spec; it simply doesn't trigger for this content length.
 
 ### State
-All four Rev 3 cards DONE and committed on `main`. tsc clean, build clean. Working tree: tracking
-files (`.nova/`, `journal.md`) still to commit.
+All four Rev 3 cards DONE on `main`. tsc clean, build clean.
+
+### Commit & push (2026-05-27)
+Tracking/docs committed as `7cc142f` (plan, cards, KANBAN, QA evidence, journal). All five Rev 3
+commits pushed to `origin/main` (`b3499e6..7cc142f`): 3R1 `6c7d5ae`, 3R2 `187dde6`, 3R3 `319301f`,
+tracking `7cc142f`. Working tree clean and in sync with the remote.
