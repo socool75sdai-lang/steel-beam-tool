@@ -18,6 +18,8 @@ interface ResultsPanelProps {
   results: CapacityResults | null;
   diagrams: DiagramSet | null;
   onDeflLimitsChange: (limits: DeflLimits) => void;
+  jobNumber: string;
+  jobName: string;
 }
 
 function statusCell(pass: boolean) {
@@ -33,7 +35,7 @@ function utilCell(util: number) {
   return <span className={pct > 100 ? 'text-red-600 font-bold' : ''}>{pct.toFixed(1)}%</span>;
 }
 
-export function ResultsPanel({ inputs, results, diagrams, onDeflLimitsChange }: ResultsPanelProps) {
+export function ResultsPanel({ inputs, results, diagrams, onDeflLimitsChange, jobNumber, jobName }: ResultsPanelProps) {
   if (!results || !diagrams) {
     return (
       <section className="p-4 mc-panel">
@@ -71,6 +73,8 @@ export function ResultsPanel({ inputs, results, diagrams, onDeflLimitsChange }: 
         sfd: diagrams.factored,
         deflectionGpsiLQ: diagrams.deflectionGpsiLQ,
         deflectionG: diagrams.deflectionG,
+        jobNumber,
+        jobName,
       });
     } catch (err) {
       console.error('PDF export failed:', err);

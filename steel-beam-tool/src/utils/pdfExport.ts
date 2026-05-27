@@ -9,6 +9,21 @@ export interface PdfExportArgs {
   sfd: DiagramPoint[];
   deflectionGpsiLQ: DeflectionProfilePoint[];
   deflectionG: DeflectionProfilePoint[];
+  jobNumber?: string;
+  jobName?: string;
+}
+
+/**
+ * Builds a filesystem-safe download filename: [JobNo]_[JobName]_YYYYMMDD_HHMM.ext
+ * Blank parts are omitted (no double underscore); all parts stripped to [A-Za-z0-9_-].
+ */
+export function buildFilename(jobNo: string, jobName: string, ext: string): string {
+  const now = new Date();
+  const date = now.toISOString().slice(0, 10).replace(/-/g, '');
+  const hhmm = now.toTimeString().slice(0, 5).replace(':', '');
+  const safe = (s: string) => s.replace(/[^A-Za-z0-9_-]/g, '');
+  const parts = [safe(jobNo), safe(jobName), `${date}_${hhmm}`].filter(Boolean);
+  return `${parts.join('_')}.${ext}`;
 }
 
 function restraintSummary(r: DesignInputs['restraint']): string {
@@ -233,15 +248,33 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
   doc.setTextColor(0, 0, 0);
   doc.setFont('helvetica', 'normal');
 
+  // ===== Job metadata block (top of page 1, before inputs) =====
+  const lineH = 5;
+  const jobNo = (args.jobNumber ?? '').trim();
+  const jobNm = (args.jobName ?? '').trim();
+  let tShift = 0;
+  if (jobNo || jobNm) {
+    doc.setFontSize(10);
+    let jy = 33;
+    if (jobNo) {
+      doc.text(`Job No:    ${jobNo}`, 10, jy);
+      jy += lineH;
+      tShift += lineH;
+    }
+    if (jobNm) {
+      doc.text(`Job Name:  ${jobNm}`, 10, jy);
+      tShift += lineH;
+    }
+  }
+
   // ===== Inputs (left column) =====
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
-  doc.text('Inputs', 10, 35);
+  doc.text('Inputs', 10, 35 + tShift);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
 
-  let y = 41;
-  const lineH = 5;
+  let y = 41 + tShift;
   doc.text(`Span: ${inputs.span.toFixed(2)} m`, 10, y);
   y += lineH;
   doc.text(`Tributary width: ${inputs.tributaryWidth.toFixed(2)} m`, 10, y);
@@ -255,7 +288,7 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
   doc.text('Loads:', 10, y);
   y += lineH;
 
-  const maxLoadY = 85;
+  const maxLoadY = 85 + tShift;
   for (const p of inputs.loads.point) {
     if (y > maxLoadY) break;
     doc.text(
@@ -287,7 +320,7 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
   // ===== Section properties (right column) =====
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
-  doc.text('Section Properties', 110, 35);
+  doc.text('Section Properties', 110, 35 + tShift);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
 
@@ -308,7 +341,7 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
     ['fy', `${results.fy.toFixed(0)} MPa`],
   ];
 
-  let yr = 41;
+  let yr = 41 + tShift;
   for (const [label, value] of sectLines) {
     doc.text(label, 110, yr);
     doc.text(value, 145, yr);
@@ -318,17 +351,18 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
   // ===== Capacity check table =====
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
-  doc.text('Design Check Summary', 10, 115);
+  const tblY = 115 + tShift;
+  doc.text('Design Check Summary', 10, tblY);
 
   doc.setFontSize(9);
-  doc.text('Check', 10, 120);
-  doc.text('Demand', 70, 120);
-  doc.text('Capacity', 105, 120);
-  doc.text('Util', 140, 120);
-  doc.text('Status', 170, 120);
+  doc.text('Check', 10, tblY + 5);
+  doc.text('Demand', 70, tblY + 5);
+  doc.text('Capacity', 105, tblY + 5);
+  doc.text('Util', 140, tblY + 5);
+  doc.text('Status', 170, tblY + 5);
   doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.2);
-  doc.line(10, 121.5, 200, 121.5);
+  doc.line(10, tblY + 6.5, 200, tblY + 6.5);
 
   doc.setFont('helvetica', 'normal');
 
@@ -378,7 +412,7 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
     },
   ];
 
-  const rowYs = [127, 133, 139, 145, 151];
+  const rowYs = [127, 133, 139, 145, 151].map((v) => v + tShift);
   rows.forEach((row, i) => {
     const ry = rowYs[i];
     doc.setTextColor(0, 0, 0);
@@ -560,5 +594,5 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
   ]);
 
   // ===== Save =====
-  doc.save(`steel-beam-design-${new Date().toISOString().slice(0, 10)}.pdf`);
+  doc.save(buildFilename(jobNo, jobNm, 'pdf'));
 }
