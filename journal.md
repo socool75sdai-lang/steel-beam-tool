@@ -447,5 +447,12 @@ MCP browser confirmation. No new npm packages. Evidence in `.nova/evidence/rev4/
 - Board (`.nova/KANBAN.md`) shows all seven cards DONE; card files 4R0–4I1 carry per-card STATUS,
   commit hashes and evidence paths.
 - Orchestration tracking, card files, QA evidence and this journal entry committed in `4b0ba6a`.
-- All work is on local `main` — **not pushed** to any remote. Dev server at `localhost:5173`
+- Rev 4 commits pushed to `origin/main` (`572b592..b6b6bcb`). Dev server at `localhost:5173`
   reflects the final state.
+
+---
+
+## 2026-05-28 — Rev 4 source doc revision
+
+Updated the Rev 4 requirements source document (`.Improvements/Rev 4/Claude REV 4.docx`); committed
+in `92ad022` and pushed to `origin/main`. No source-code or behaviour changes.
