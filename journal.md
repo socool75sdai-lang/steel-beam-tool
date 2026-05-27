@@ -442,3 +442,10 @@ MCP browser confirmation. No new npm packages. Evidence in `.nova/evidence/rev4/
   αc ≈ 0.85 at λn ≈ 175, whereas the spec's cited source (AS4100 Table 6.3.3(a), HR category) gives
   αc ≈ 0.22. Replaced it with the exact AS4100 Cl. 6.3.3 curve (αb = 0) so φNc matches the standard.
   All other implementation followed the plan/HANDOVER as written.
+
+### Tracking & status
+- Board (`.nova/KANBAN.md`) shows all seven cards DONE; card files 4R0–4I1 carry per-card STATUS,
+  commit hashes and evidence paths.
+- Orchestration tracking, card files, QA evidence and this journal entry committed in `4b0ba6a`.
+- All work is on local `main` — **not pushed** to any remote. Dev server at `localhost:5173`
+  reflects the final state.
