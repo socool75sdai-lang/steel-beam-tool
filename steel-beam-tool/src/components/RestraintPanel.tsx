@@ -23,12 +23,27 @@ const endOptions: { value: EndRestraint; label: string }[] = [
 
 export function RestraintPanel({ inputs, onChange }: RestraintPanelProps) {
   const r = inputs.restraint;
+  const sc = inputs.supportCondition;
+  const lockedEndA = sc === 'FP' || sc === 'FF';
+  const lockedEndB = sc === 'PF' || sc === 'FF';
 
   const updateRestraint = (patch: Partial<typeof r>) => {
     onChange({ restraint: { ...r, ...patch } });
   };
 
   const [intermediateCount, setIntermediateCount] = useState(0);
+
+  // A fixed support condition forces the corresponding LTB end restraint to F
+  // and switches to Advanced mode. Switching back to PP releases the lock but
+  // leaves the auto-set values in place (now editable again).
+  useEffect(() => {
+    const patch: Partial<typeof r> = {};
+    if ((lockedEndA || lockedEndB) && r.mode !== 'advanced') patch.mode = 'advanced';
+    if (lockedEndA && r.endA !== 'F') patch.endA = 'F';
+    if (lockedEndB && r.endB !== 'F') patch.endB = 'F';
+    if (Object.keys(patch).length > 0) updateRestraint(patch);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sc]);
 
   const computedPositions = Array.from({ length: intermediateCount }, (_, i) =>
     parseFloat(((inputs.span / (intermediateCount + 1)) * (i + 1)).toFixed(3)),
@@ -102,10 +117,11 @@ export function RestraintPanel({ inputs, onChange }: RestraintPanelProps) {
               End A
               <select
                 value={r.endA}
+                disabled={lockedEndA}
                 onChange={(e) =>
                   updateRestraint({ endA: e.target.value as EndRestraint })
                 }
-                className="w-full mt-1 border rounded px-2 py-1 mc-select"
+                className="w-full mt-1 border rounded px-2 py-1 mc-select disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {endOptions.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -113,15 +129,19 @@ export function RestraintPanel({ inputs, onChange }: RestraintPanelProps) {
                   </option>
                 ))}
               </select>
+              {lockedEndA && (
+                <p className="text-xs mt-1 text-gray-500">Set by support condition.</p>
+              )}
             </label>
             <label className="text-sm">
               End B
               <select
                 value={r.endB}
+                disabled={lockedEndB}
                 onChange={(e) =>
                   updateRestraint({ endB: e.target.value as EndRestraint })
                 }
-                className="w-full mt-1 border rounded px-2 py-1 mc-select"
+                className="w-full mt-1 border rounded px-2 py-1 mc-select disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {endOptions.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -129,6 +149,9 @@ export function RestraintPanel({ inputs, onChange }: RestraintPanelProps) {
                   </option>
                 ))}
               </select>
+              {lockedEndB && (
+                <p className="text-xs mt-1 text-gray-500">Set by support condition.</p>
+              )}
             </label>
           </div>
 

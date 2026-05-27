@@ -563,9 +563,22 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
     `Msx = Ze x fy = ${fmtExp(im.Ze)} x ${im.fy.toFixed(0)} = ${fmtExp(im.Msx)} N.mm`,
     `phiMs = 0.9 x Msx / 1e6 = ${im.phiMs.toFixed(1)} kN.m`,
   ]);
-  calcStep('6. Effective Length', '[AS4100 Cl. 5.6.3]', [
+  const supportLabel: Record<string, string> = {
+    PP: 'Pin-Pin',
+    FP: 'Fixed-Pin',
+    PF: 'Pin-Fixed',
+    FF: 'Fixed-Fixed',
+  };
+  const supportLines = [
+    `Support: ${supportLabel[im.supportCondition] ?? im.supportCondition}`,
     `Le = ${im.Le.toFixed(2)} m`,
-  ]);
+  ];
+  if (im.supportCondition !== 'PP') {
+    supportLines.push(
+      `End moments (1.2G+1.5Q): M_A = ${im.femA.toFixed(1)} kN.m, M_B = ${im.femB.toFixed(1)} kN.m  (hogging)`,
+    );
+  }
+  calcStep('6. Effective Length & Supports', '[AS4100 Cl. 5.6.3]', supportLines);
   calcStep('7. Reference Buckling Moment', '[AS4100 Cl. 5.6.1.1]', [
     `Moa = (pi/Le) x sqrt(E.Iy x (G.J + pi^2.E.Iw/Le^2)) = ${moaStr}`,
   ]);

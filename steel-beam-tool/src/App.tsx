@@ -27,6 +27,7 @@ function initialInputs(): DesignInputs {
     deflLimits: { GQ: 300, G: 360 },
     liveLoadType: 'office',
     steelGrade: 'G300',
+    supportCondition: 'PP',
   };
 }
 

@@ -1,5 +1,18 @@
 import type { DesignInputs, DeflectionProfilePoint } from '@/types';
 import { calcSelfWeightKnPerM } from '@/engineering/sections/sectionUtils';
+import { supportEndMoments } from '@/engineering/as1170/loadCombinations';
+
+/**
+ * Downward deflection (mm) contributed by the hogging support end moments mA, mB
+ * (N·mm) on a simply-supported span, evaluated at x (mm). EI in N·mm².
+ * Derived from EI·v = M_internal·g(x), g(x) = x²/2 − x³/(6L) − Lx/3, with
+ * M_internal = −mA at A and −mB at B; downward δ = −v.
+ */
+function endMomentDeflection(mA: number, mB: number, L: number, EI: number, x: number): number {
+  if (EI <= 0 || L <= 0 || (mA === 0 && mB === 0)) return 0;
+  const g = (t: number): number => (t * t) / 2 - (t * t * t) / (6 * L) - (L * t) / 3;
+  return (mA * g(x) + mB * g(L - x)) / EI;
+}
 
 export interface DeflectionResult {
   midspan: number; // mm
@@ -117,6 +130,14 @@ export function calcDeflection(
     });
   }
 
+  // Fixed-end support moments (N·mm) for the selected support condition
+  const { mA, mB } = supportEndMoments(
+    pointLoads.map((p) => ({ P: p.P, a: p.a })),
+    lineLoads.map((l) => ({ w: l.w, a: l.a, b: l.b })),
+    L,
+    inputs.supportCondition,
+  );
+
   // Sample at 81 points
   const samples = 81;
   let midspan = 0;
@@ -132,6 +153,7 @@ export function calcDeflection(
     for (const w of lineLoads) {
       delta += deflectionPartialUDL(w.w, w.a, w.b, L, EI, x);
     }
+    delta += endMomentDeflection(mA, mB, L, EI, x);
     if (Math.abs(x - L / 2) < 1e-6) {
       midspan = delta;
     }
@@ -195,6 +217,13 @@ export function calcDeflectionProfile(
     lineLoads.push({ w: swKnPerM * gFactor, a: 0, b: L });
   }
 
+  const { mA, mB } = supportEndMoments(
+    pointLoads.map((p) => ({ P: p.P, a: p.a })),
+    lineLoads.map((l) => ({ w: l.w, a: l.a, b: l.b })),
+    L,
+    inputs.supportCondition,
+  );
+
   const samples = 81;
   const profile: DeflectionProfilePoint[] = [];
   for (let i = 0; i < samples; i++) {
@@ -202,6 +231,7 @@ export function calcDeflectionProfile(
     let delta = 0;
     for (const p of pointLoads) delta += deflectionPointLoad(p.P, p.a, L, EI, x);
     for (const w of lineLoads) delta += deflectionPartialUDL(w.w, w.a, w.b, L, EI, x);
+    delta += endMomentDeflection(mA, mB, L, EI, x);
     profile.push({ x: x / 1000, delta });
   }
   return profile;

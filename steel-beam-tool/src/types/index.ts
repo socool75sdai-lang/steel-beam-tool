@@ -5,6 +5,7 @@ export type SimpleRestraint = 'FF' | 'PP' | 'PF' | 'FC' | 'custom';
 export type EndRestraint = 'F' | 'P' | 'L' | 'U';
 export type SectionClass = 'compact' | 'noncompact' | 'slender';
 export type SteelGrade = 'G300' | 'G350';
+export type SupportCondition = 'PP' | 'FP' | 'PF' | 'FF';
 export type ComboName = '1.2G+1.5Q' | 'G+Q' | 'G';
 export type LiveLoadType =
   | 'domestic'
@@ -84,6 +85,7 @@ export interface DesignInputs {
   deflLimits: DeflLimits;
   liveLoadType: LiveLoadType;
   steelGrade: SteelGrade;
+  supportCondition: SupportCondition;
 }
 
 export interface DiagramPoint {
@@ -129,6 +131,9 @@ export interface DesignIntermediates {
   deflectionG: number;
   deflectionLimitGpsiLQ: number;
   deflectionLimitG: number;
+  supportCondition: SupportCondition;
+  femA: number; // kN·m, hogging positive
+  femB: number; // kN·m, hogging positive
 }
 
 export interface CapacityResults {

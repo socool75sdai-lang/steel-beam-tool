@@ -78,6 +78,9 @@ export function evaluateDesign(inputs: DesignInputs): EvaluationResult {
     deflectionG: deflG,
     deflectionLimitGpsiLQ: deflLimitGpsiLQ,
     deflectionLimitG: deflLimitG,
+    supportCondition: inputs.supportCondition,
+    femA: factored.femA,
+    femB: factored.femB,
   };
 
   const results: CapacityResults = {

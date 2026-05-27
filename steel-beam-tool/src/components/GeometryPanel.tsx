@@ -1,5 +1,5 @@
 import React from 'react';
-import type { DesignInputs, SectionType, SteelGrade } from '@/types';
+import type { DesignInputs, SectionType, SteelGrade, SupportCondition } from '@/types';
 import { getSectionsByType, getAllSectionTypes } from '@/engineering/sections/sectionUtils';
 import { autoSelectSection } from '@/engineering/sections/autoSelect';
 
@@ -87,6 +87,22 @@ export function GeometryPanel({ inputs, onChange }: GeometryPanelProps) {
           {inputs.tributaryWidth <= 0 && (
             <p className="text-xs text-red-600 mt-1">Must be &gt; 0</p>
           )}
+        </label>
+      </div>
+
+      <div className="mt-3">
+        <label className="text-sm font-medium block mc-label">
+          Support Conditions
+          <select
+            value={inputs.supportCondition}
+            onChange={(e) => onChange({ supportCondition: e.target.value as SupportCondition })}
+            className="mt-1 w-full border border-gray-300 rounded px-2 py-1 mc-select"
+          >
+            <option value="PP">Pin–Pin (default)</option>
+            <option value="FP">Fixed–Pin (End A fixed, End B pin)</option>
+            <option value="PF">Pin–Fixed (End A pin, End B fixed)</option>
+            <option value="FF">Fixed–Fixed</option>
+          </select>
         </label>
       </div>
 
