@@ -594,6 +594,17 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
     `d/tw = ${im.dOnTw.toFixed(1)} ${shearCmp} 82.sqrt(250/fy) = ${im.slenderLimit.toFixed(1)}  ->  ${im.webSlender ? 'web slender (Vv reduced)' : 'no web slenderness reduction'}`,
     `phiVv = 0.9 x 0.6 x fy x Aw / 1000 = ${im.phiVv.toFixed(1)} kN`,
   ]);
+  if (inputs.axialCompression) {
+    calcStep('COMBINED ACTIONS', '[AS4100 Cl. 8.4]', [
+      `N* = ${im.nStar.toFixed(1)} kN`,
+      `phiNs = 0.9 x Ag x fy = 0.9 x ${s.Ag.toFixed(0)} x ${im.fy.toFixed(0)} / 1000 = ${im.phiNs.toFixed(1)} kN`,
+      `lambda_n = (Le/r_min) x sqrt(kf x fy / 250) = ${im.lambdaN.toFixed(1)}   (kf = ${im.kf.toFixed(2)})`,
+      `alpha_c = ${im.alphaC.toFixed(3)}   (HR residual stress category, Table 6.3.3(a))`,
+      `phiNc = 0.9 x alpha_c x kf x Ag x fy / 1000 = ${im.phiNc.toFixed(1)} kN`,
+      `Section: N*/phiNs + M*/phiMs = ${im.combinedSectionRatio.toFixed(3)} <= 1.0  ->  ${results.passes.combinedSection ? 'PASS' : 'FAIL'}  [Cl. 8.4.2.1]`,
+      `Member:  N*/phiNc + M*/phiMbx = ${im.combinedMemberRatio.toFixed(3)} <= 1.0  ->  ${results.passes.combinedMember ? 'PASS' : 'FAIL'}  [Cl. 8.4.2.2]`,
+    ]);
+  }
   calcStep('11. Load Combinations', '[AS1170.0 Cl. 4.2.2]', [
     `ULS governing: ${im.governingCombo}  ->  Mmax = ${im.Mmax.toFixed(1)} kN.m, Vmax = ${im.Vmax.toFixed(1)} kN`,
     `SLS combo: G + psi_l x Q   (psi_l = ${im.psiL}, ${im.liveLoadTypeLabel})`,

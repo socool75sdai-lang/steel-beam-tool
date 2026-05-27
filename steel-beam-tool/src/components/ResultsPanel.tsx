@@ -143,6 +143,32 @@ export function ResultsPanel({ inputs, results, diagrams, onDeflLimitsChange, jo
             </td>
             <td className="text-center p-2 border">{statusCell(results.passes.deflectionG)}</td>
           </tr>
+          {results.intermediates.nStar > 0 && (
+            <>
+              <tr>
+                <td className="p-2 border">Combined — Section (N*/φNs + M*/φMs)</td>
+                <td className="text-right p-2 border">
+                  {results.intermediates.combinedSectionRatio.toFixed(3)}
+                </td>
+                <td className="text-right p-2 border">≤ 1.00</td>
+                <td className="text-right p-2 border">
+                  {utilCell(results.intermediates.combinedSectionRatio)}
+                </td>
+                <td className="text-center p-2 border">{statusCell(results.passes.combinedSection)}</td>
+              </tr>
+              <tr>
+                <td className="p-2 border">Combined — Member (N*/φNc + M*/φMbx)</td>
+                <td className="text-right p-2 border">
+                  {results.intermediates.combinedMemberRatio.toFixed(3)}
+                </td>
+                <td className="text-right p-2 border">≤ 1.00</td>
+                <td className="text-right p-2 border">
+                  {utilCell(results.intermediates.combinedMemberRatio)}
+                </td>
+                <td className="text-center p-2 border">{statusCell(results.passes.combinedMember)}</td>
+              </tr>
+            </>
+          )}
         </tbody>
       </table>
 

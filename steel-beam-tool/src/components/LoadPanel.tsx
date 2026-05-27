@@ -405,6 +405,50 @@ export function LoadPanel({ inputs, onChange }: LoadPanelProps) {
           </p>
         )}
       </div>
+
+      {/* Axial compression (beam-column) — AS4100 Cl. 8.4 */}
+      <div className="border-t pt-3 mt-2">
+        <h3 className="font-medium mb-2">Axial Compression</h3>
+        <div className="grid grid-cols-12 gap-2 items-center">
+          <label className="col-span-7 text-sm">
+            Axial Compression (kN)
+            <input
+              className={inputCls}
+              type="number"
+              step={1}
+              value={inputs.axialCompression?.magnitude ?? ''}
+              placeholder="0"
+              onChange={(e) => {
+                const val = parseFloat(e.target.value);
+                onChange({
+                  axialCompression:
+                    isNaN(val) || val === 0
+                      ? null
+                      : { magnitude: val, category: inputs.axialCompression?.category ?? 'G' },
+                });
+              }}
+            />
+          </label>
+          <label className="col-span-5 text-sm">
+            Category
+            <select
+              className={inputCls}
+              value={inputs.axialCompression?.category ?? 'G'}
+              disabled={!inputs.axialCompression}
+              onChange={(e) =>
+                onChange({
+                  axialCompression: inputs.axialCompression
+                    ? { ...inputs.axialCompression, category: e.target.value as LoadCategory }
+                    : null,
+                })
+              }
+            >
+              <option value="G">G</option>
+              <option value="Q">Q</option>
+            </select>
+          </label>
+        </div>
+      </div>
     </section>
   );
 }

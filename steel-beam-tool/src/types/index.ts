@@ -86,6 +86,7 @@ export interface DesignInputs {
   liveLoadType: LiveLoadType;
   steelGrade: SteelGrade;
   supportCondition: SupportCondition;
+  axialCompression: { magnitude: number; category: LoadCategory } | null;
 }
 
 export interface DiagramPoint {
@@ -134,6 +135,14 @@ export interface DesignIntermediates {
   supportCondition: SupportCondition;
   femA: number; // kN·m, hogging positive
   femB: number; // kN·m, hogging positive
+  nStar: number; // kN
+  phiNs: number; // kN
+  phiNc: number; // kN
+  kf: number;
+  lambdaN: number;
+  alphaC: number;
+  combinedSectionRatio: number; // N*/φNs + M*/φMs
+  combinedMemberRatio: number; // N*/φNc + M*/φMbx
 }
 
 export interface CapacityResults {
@@ -158,6 +167,8 @@ export interface CapacityResults {
     shear: boolean;
     deflectionGpsiLQ: boolean;
     deflectionG: boolean;
+    combinedSection: boolean;
+    combinedMember: boolean;
     overall: boolean;
   };
   intermediates: DesignIntermediates;

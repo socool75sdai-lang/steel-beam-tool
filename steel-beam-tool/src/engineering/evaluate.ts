@@ -6,6 +6,7 @@ import {
   calcMemberCapacity,
 } from '@/engineering/as4100/momentCapacity';
 import { calcShearCapacity } from '@/engineering/as4100/shearCapacity';
+import { calcCompressionCapacity } from '@/engineering/as4100/compressionCapacity';
 import { calcDeflection, calcDeflectionProfile } from '@/engineering/as4100/deflection';
 import {
   calcEffectiveLength,
@@ -38,13 +39,38 @@ export function evaluateDesign(inputs: DesignInputs): EvaluationResult {
   const deflLimitGpsiLQ = (inputs.span * 1000) / inputs.deflLimits.GQ;
   const deflLimitG = (inputs.span * 1000) / inputs.deflLimits.G;
 
+  // Axial compression + combined actions (AS4100 Cl. 8.4)
+  let nStar = 0;
+  let compCap = { phiNs: 0, phiNc: 0, kf: 1.0, lambdaN: 0, alphaC: 1.0 };
+  if (inputs.axialCompression) {
+    const { magnitude, category } = inputs.axialCompression;
+    const n12G15Q = category === 'G' ? 1.2 * magnitude : 1.5 * magnitude;
+    const nGQ = magnitude;
+    const nG = category === 'G' ? magnitude : 0;
+    nStar = Math.max(n12G15Q, nGQ, nG);
+    compCap = calcCompressionCapacity(inputs.section, fy, Le_m * 1000, secCap.sectionClass);
+  }
+  // Ratios use consistent units: N* and φNs/φNc in kN; M* and φMs/φMbx in kN·m.
+  const combinedSectionRatio =
+    compCap.phiNs > 0 ? nStar / compCap.phiNs + factored.Mmax / secCap.phiMs : 0;
+  const combinedMemberRatio =
+    compCap.phiNc > 0 ? nStar / compCap.phiNc + factored.Mmax / memCap.phiMbx : 0;
+
   const sectionMoment = factored.Mmax <= secCap.phiMs;
   const memberMoment = factored.Mmax <= memCap.phiMbx;
   const shearPass = factored.Vmax <= shear.phiVv;
   const deflectionGpsiLQ = deflGpsiLQ <= deflLimitGpsiLQ;
   const deflectionG = deflG <= deflLimitG;
+  const combinedSection = inputs.axialCompression ? combinedSectionRatio <= 1.0 : true;
+  const combinedMember = inputs.axialCompression ? combinedMemberRatio <= 1.0 : true;
   const overall =
-    sectionMoment && memberMoment && shearPass && deflectionGpsiLQ && deflectionG;
+    sectionMoment &&
+    memberMoment &&
+    shearPass &&
+    deflectionGpsiLQ &&
+    deflectionG &&
+    combinedSection &&
+    combinedMember;
 
   const intermediates: DesignIntermediates = {
     fy,
@@ -81,6 +107,14 @@ export function evaluateDesign(inputs: DesignInputs): EvaluationResult {
     supportCondition: inputs.supportCondition,
     femA: factored.femA,
     femB: factored.femB,
+    nStar,
+    phiNs: compCap.phiNs,
+    phiNc: compCap.phiNc,
+    kf: compCap.kf,
+    lambdaN: compCap.lambdaN,
+    alphaC: compCap.alphaC,
+    combinedSectionRatio,
+    combinedMemberRatio,
   };
 
   const results: CapacityResults = {
@@ -105,6 +139,8 @@ export function evaluateDesign(inputs: DesignInputs): EvaluationResult {
       shear: shearPass,
       deflectionGpsiLQ,
       deflectionG,
+      combinedSection,
+      combinedMember,
       overall,
     },
     intermediates,

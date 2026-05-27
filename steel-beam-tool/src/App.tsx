@@ -28,6 +28,7 @@ function initialInputs(): DesignInputs {
     liveLoadType: 'office',
     steelGrade: 'G300',
     supportCondition: 'PP',
+    axialCompression: null,
   };
 }
 
