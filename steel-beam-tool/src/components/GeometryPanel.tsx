@@ -1,5 +1,5 @@
 import React from 'react';
-import type { DesignInputs, SectionType } from '@/types';
+import type { DesignInputs, SectionType, SteelGrade } from '@/types';
 import { getSectionsByType, getAllSectionTypes } from '@/engineering/sections/sectionUtils';
 import { autoSelectSection } from '@/engineering/sections/autoSelect';
 
@@ -118,6 +118,20 @@ export function GeometryPanel({ inputs, onChange }: GeometryPanelProps) {
                 {s.designation}
               </option>
             ))}
+          </select>
+        </label>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 mt-3">
+        <label className="text-sm font-medium block mc-label">
+          Steel Grade
+          <select
+            value={inputs.steelGrade}
+            onChange={(e) => onChange({ steelGrade: e.target.value as SteelGrade })}
+            className="mt-1 w-full border border-gray-300 rounded px-2 py-1 mc-select"
+          >
+            <option value="G300">Grade 300</option>
+            <option value="G350">Grade 350</option>
           </select>
         </label>
       </div>

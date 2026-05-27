@@ -1,4 +1,4 @@
-import type { SectionType, SteelSection } from '@/types';
+import type { SectionType, SteelSection, SteelGrade } from '@/types';
 import { SECTION_DATABASE } from './sectionDatabase';
 
 export function getSectionsByType(type: SectionType): SteelSection[] {
@@ -25,6 +25,13 @@ export function calcSelfWeightKnPerM(section: SteelSection): number {
   return (section.mass_kg_m * 9.81) / 1000;
 }
 
-export function calcFy(section: SteelSection): number {
-  return section.tf <= 17 ? 300 : 280;
+export function calcFy(section: SteelSection, grade: SteelGrade = 'G300'): number {
+  const tf = section.tf;
+  if (grade === 'G350') {
+    if (tf <= 11) return 360;
+    if (tf <= 17) return 340;
+    return 330;
+  }
+  // G300 (existing logic)
+  return tf <= 17 ? 300 : 280;
 }

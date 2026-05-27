@@ -4,6 +4,7 @@ export type RestraintMode = 'simple' | 'advanced';
 export type SimpleRestraint = 'FF' | 'PP' | 'PF' | 'FC' | 'custom';
 export type EndRestraint = 'F' | 'P' | 'L' | 'U';
 export type SectionClass = 'compact' | 'noncompact' | 'slender';
+export type SteelGrade = 'G300' | 'G350';
 export type ComboName = '1.2G+1.5Q' | 'G+Q' | 'G';
 export type LiveLoadType =
   | 'domestic'
@@ -82,6 +83,7 @@ export interface DesignInputs {
   restraint: RestraintConfig;
   deflLimits: DeflLimits;
   liveLoadType: LiveLoadType;
+  steelGrade: SteelGrade;
 }
 
 export interface DiagramPoint {

@@ -23,7 +23,7 @@ export function evaluateDesign(inputs: DesignInputs): EvaluationResult {
   const servic = analyseBeam(inputs, COMBOS[1]); // G+Q
   const dead = analyseBeam(inputs, COMBOS[2]); // G
 
-  const fy = calcFy(inputs.section);
+  const fy = calcFy(inputs.section, inputs.steelGrade);
   const Le_m = calcEffectiveLength(inputs.span, inputs.restraint);
   const alphaM =
     inputs.restraint.alphaMOverride ?? calcAlphaM(factored.bmd, 0, inputs.span);
