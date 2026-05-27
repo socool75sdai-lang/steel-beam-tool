@@ -150,7 +150,7 @@ export function ResultsPanel({ inputs, results, diagrams, onDeflLimitsChange }: 
 
       <div className="grid grid-cols-2 gap-3 mb-4">
         <label className="text-sm">
-          G+Q deflection limit: span /
+          {deflLabel} deflection limit: span /
           <input
             type="number"
             step={10}

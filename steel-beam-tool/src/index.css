@@ -61,3 +61,10 @@ body {
   border-color: var(--mc-gold);
   color: #111;
 }
+
+[data-theme="mcveigh"] input,
+[data-theme="mcveigh"] textarea,
+[data-theme="mcveigh"] select option {
+  color: #111;
+  background-color: #ffffff;
+}
