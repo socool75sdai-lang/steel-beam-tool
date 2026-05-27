@@ -1,26 +1,27 @@
-# Rev 3 Kanban Board — Steel Beam Design Tool
+# Rev 4 Kanban Board — Steel Beam Design Tool
 
 Pull model: `BACKLOG → READY → IN_PROGRESS → CRITIC_REVIEW → QA → DONE` (or `BLOCKED`).
-Execution mode: single-agent direct execution on `main`. Plan: `.nova/REV3-ORCHESTRATION-PLAN.md`.
+Execution mode: single-agent direct execution on `main`. Plan: `.nova/REV4-ORCHESTRATION-PLAN.md`.
 
 | Card | Title | Column | Branch |
 |------|-------|--------|--------|
-| 3R1 | Engineering corrections (Items 1+2) | DONE | (main) |
-| 3R2 | PDF layout + enhanced diagrams (Items 3+4) | DONE | (main) |
-| 3R3 | PDF calc sheet (Item 5) | DONE | (main) |
-| 3I1 | Integration — verification + final visual QA | DONE | (main) |
+| 4R0 | Polish — theme text + dynamic label (Items 6+7) | DONE (561eca1) | (main) |
+| 4R1 | Steel grade dropdown (Item 8) | DONE (b2330b2) | (main) |
+| 4R2 | Job metadata + save/load JSON (Items 4+5) | DONE (b2858fa) | (main) |
+| 4R3 | Fixed end support conditions (Item 1) | DONE (0a033ce) | (main) |
+| 4R4 | Axial compression + combined actions (Item 2) | DONE (6fc90cb) | (main) |
+| 4R5 | Expanded calculation working (Item 3) | DONE (3a89c60) | (main) |
+| 4I1 | Integration — verification + final visual QA | DONE | (main) |
 
-3R2 → READY when 3R1 DONE. 3R3 → READY when 3R2 DONE. 3I1 → READY when 3R3 DONE.
+4R1 → READY when 4R0 DONE. 4R2 → READY when 4R1 DONE. 4R3 → READY when 4R2 DONE.
+4R4 → READY when 4R3 DONE. 4R5 → READY when 4R4 DONE. 4I1 → READY when 4R5 DONE.
 
-## Execution note
+## Status
 
-**Board reset 2026-05-26 (re-execution):** A prior run marked all four cards DONE in this board,
-but no Rev 3 source changes were present in `steel-beam-tool/src/` (the implementation was never
-committed or was lost). Board reset to reflect ground truth; cards are being implemented for real,
-sequentially on `main`, each gated with `npx tsc --noEmit` + `npm run build`.
+**All cards DONE — Rev 4 complete.** Commits: 4R0 561eca1, 4R1 b2330b2, 4R2 b2858fa,
+4R3 0a033ce, 4R4 6fc90cb, 4R5 3a89c60. Each card gated with `npx tsc --noEmit` +
+`npm run build` + Playwright MCP browser confirmation. Evidence in `.nova/evidence/rev4/`.
 
-**Browser visual confirmation:** Done via Playwright MCP (available this run). All 7 HANDOVER
-gates confirmed in-browser and by inspecting the exported PDF (3 pages). Evidence in
-`.nova/evidence/rev3/`. Commits: 3R1 6c7d5ae, 3R2 187dde6, 3R3 319301f.
-
-**Status:** All four cards DONE — Rev 3 complete.
+**Note (4R4):** the plan's approximate `calcAlphaC` was replaced with the exact AS4100
+Cl. 6.3.3 (HR) curve — the plan's closed form returned αc ≈ 0.85 at λn ≈ 175 versus the
+cited Table 6.3.3(a) value ≈ 0.22, so it was corrected to honour the spec's stated source.

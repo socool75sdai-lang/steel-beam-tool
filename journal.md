@@ -328,3 +328,117 @@ All four Rev 3 cards DONE on `main`. tsc clean, build clean.
 Tracking/docs committed as `7cc142f` (plan, cards, KANBAN, QA evidence, journal). All five Rev 3
 commits pushed to `origin/main` (`b3499e6..7cc142f`): 3R1 `6c7d5ae`, 3R2 `187dde6`, 3R3 `319301f`,
 tracking `7cc142f`. Working tree clean and in sync with the remote.
+
+---
+
+## 2026-05-27 — Rev 4 Requirements Captured (8 items)
+
+### Context
+Requirements elicited via design interview. Handover spec written to `.Improvements/Rev 4/HANDOVER.md`.
+Not yet implemented — planning agent to produce orchestration plan before execution.
+
+### Items
+| # | Item | Status |
+|---|---|---|
+| 1 | Fixed end support conditions (Pin-Pin / Fixed-Pin / Pin-Fixed / Fixed-Fixed) in Geometry panel | Specified |
+| 2 | Compressive axial load input + combined action checks (AS4100 Cl. 8.4) | Specified |
+| 3 | Collapsible calculation working in Results panel (bending, shear, deflection + assumption notes) | Specified |
+| 4 | Job Number and Job Name fields; reflected in PDF and filename | Specified |
+| 5 | Save/Load JSON file (import/export DesignInputs + job metadata) | Specified |
+| 6 | McVeigh theme dark text fix for all input elements | Specified |
+| 7 | Dynamic deflection label showing actual ψ_l factor | Specified |
+| 8 | Grade 300 / Grade 350 steel grade dropdown in Geometry panel | Specified |
+
+### Key decisions recorded in HANDOVER.md
+- Fixed supports auto-set and lock the corresponding LTB end restraint to F (Advanced mode)
+- Compressive load: single axial value (kN) + G/Q toggle; two new result rows hidden when N*=0
+- Expanded calc: collapsible below results table; all three check groups; Unicode symbols; assumption notes
+- Job fields: stateless (no localStorage); PDF shows two-line block at top of page 1
+- Export filename: `[JobNo]_[JobName]_YYYYMMDD_HHMM.{pdf|json}`, blank parts omitted
+- Import: file picker only (no drag-and-drop); restores jobNumber, jobName, DesignInputs
+- Grade 350 fy: 360/340/330 MPa by tf per AS3678; applies to all section types
+- Sequencing: 6 cards (4R0→4R5), strictly sequential on main
+
+---
+
+## 2026-05-27 — Rev 4 Orchestration Planned (8 items)
+
+### Context
+Handover spec at `.Improvements\Rev 4\HANDOVER.md` received and reviewed. Eight items across
+three categories: engineering additions (Items 1, 2), UI/output expansion (Items 3, 4, 5),
+and polish (Items 6, 7, 8). All decisions final — confirmed with engineer 2026-05-27.
+
+### Items
+1. Fixed end support conditions (PP / FP / PF / FF) — FEM analysis in loadCombinations.ts + deflection.ts
+2. Compressive axial load + combined action checks (AS4100 Cl. 8.4) — new compressionCapacity.ts
+3. Collapsible calculation working in Results panel — reads DesignIntermediates (no new computation)
+4. Job Number + Job Name fields (stateless; PDF block + filename)
+5. Save/Load JSON file (import/export DesignInputs + job metadata)
+6. McVeigh theme dark text fix — one CSS rule in index.css
+7. Dynamic deflection label (G+{psiL}Q) — one string change in ResultsPanel.tsx
+8. Grade 300 / Grade 350 steel grade dropdown — calcFy updated in sectionUtils.ts
+
+### Orchestration
+Six implementation cards (4R0 → 4R5) + one integration card (4I1), strictly sequential on `main`.
+Sequential execution justified by file conflicts: `types/index.ts` (Items 1, 2, 8),
+`evaluate.ts` (Items 1, 2, 8), `pdfExport.ts` (Items 1, 2, 4).
+
+Agent roles: Implementer, Critic (spec conformance review, cycle-limited, no implementation),
+Test Validator (tsc + build + **Playwright MCP browser visual confirmation required for every card**).
+
+Kanban board at `.nova/KANBAN.md`. Card files at `.nova/cards/4R0.md`–`4I1.md`.
+Plan at `.nova/REV4-ORCHESTRATION-PLAN.md`.
+
+### Key sequencing decisions
+- 4R0 first (trivial, zero risk) → 4R1 (types only) → 4R2 (pure UI state, no engineering)
+- 4R3 before 4R4: `DesignInputs` + `evaluate.ts` must be stable before adding compression types
+- 4R5 last (reads all DesignIntermediates — must come after 4R3 + 4R4 populate new fields)
+- No worktrees — consistent with Rev 2/3 precedent and justified by same-file conflicts
+
+### Key design decisions
+- `supportCondition: 'PP'` default — all existing behaviour unchanged when not set
+- `axialCompression: null` default — combined rows hidden, no impact on existing checks
+- `steelGrade: 'G300'` default — calcFy unchanged for all existing callers (default parameter)
+- Compression αc: Perry-Robertson (HR residual stress category) per AS4100 Table 6.3.3(a)
+- McVeigh CSS fix: `[data-theme="mcveigh"] input, textarea, select option { color: #111; background-color: #fff }`
+- Grade 350 fy: 360/340/330 MPa by tf thresholds (≤11 / ≤17 / >17 mm) per AS3678
+- No new npm packages.
+
+---
+
+## 2026-05-27 — Rev 4 Implemented (8 items, all DONE)
+
+### Outcome
+All six implementation cards (4R0–4R5) plus the integration card (4I1) executed sequentially on
+`main`. Every card gated with `npx tsc --noEmit` (0 errors) + `npm run build` (clean) + Playwright
+MCP browser confirmation. No new npm packages. Evidence in `.nova/evidence/rev4/`.
+
+### Commits
+| Card | Items | Commit | Summary |
+|---|---|---|---|
+| 4R0 | 6, 7 | 561eca1 | McVeigh input dark-text CSS rule; dynamic G+{ψ_l}Q deflection label |
+| 4R1 | 8 | b2330b2 | SteelGrade type; calcFy(section, grade); Grade 350 360/340/330 MPa; Geometry dropdown |
+| 4R2 | 4, 5 | b2858fa | Job No/Name fields; JSON import/export round-trip; PDF job block + filename convention |
+| 4R3 | 1 | 0a033ce | SupportCondition PP/FP/PF/FF; FEM superposition in BMD/SFD + deflection; restraint lock/unlock |
+| 4R4 | 2 | 6fc90cb | compressionCapacity.ts (new); φNs/φNc; combined section/member interaction; conditional rows |
+| 4R5 | 3 | 3a89c60 | Collapsible expanded calc working (BENDING/SHEAR/DEFLECTION + conditional COMBINED ACTIONS) |
+
+### Verification highlights (browser + PDF)
+- 4R0: McVeigh inputs render dark text on white; label updates Office→G+0.4Q, Storage→G+0.6Q.
+- 4R1: 200UB25.4 G300→G350 raised φMs 70.20→83.22 kN·m, φMbx 26.66→27.39 kN·m.
+- 4R2: export `J001_TownHall_YYYYMMDD_HHMM.json` ({jobNumber,jobName,inputs}); reload clears; import
+  restores all state ("Loaded: …"); PDF filename + page-1 job block confirmed.
+- 4R3: 360UB44.7/10 m/20 kN·m UDL — M* PP 306.58 → FF 204.40 kN·m (=wL²/12 vs wL²/8), δ 109.97 →
+  21.99 mm (=1/5). FF BMD shows hogging ends + sagging midspan; PF M*=wL²/8 (propped, correct).
+  FF locks both end restraints (greyed + note); PF locks End B only; PP releases.
+- 4R4: combined rows hidden at N*=0, appear at N*>0; member interaction drives overall FAIL.
+- 4R5: toggle expands/collapses; substituted values match the results table; COMBINED ACTIONS
+  conditional on N*>0.
+- Integrated PDF (J001/Town Hall/FF/100 kN axial): page 1 job block without overlap; page 3 states
+  Support: Fixed-Fixed with end moments and a full COMBINED ACTIONS block.
+
+### Deviation from plan (recorded)
+- **4R4 αc:** the orchestration plan supplied an approximate `calcAlphaC` closed form that returned
+  αc ≈ 0.85 at λn ≈ 175, whereas the spec's cited source (AS4100 Table 6.3.3(a), HR category) gives
+  αc ≈ 0.22. Replaced it with the exact AS4100 Cl. 6.3.3 curve (αb = 0) so φNc matches the standard.
+  All other implementation followed the plan/HANDOVER as written.
