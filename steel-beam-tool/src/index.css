@@ -68,3 +68,12 @@ body {
   color: #111;
   background-color: #ffffff;
 }
+
+/* Recharts SVG text inherits the cream panel colour and disappears against the
+   white chart canvas. Force dark ink for axis ticks, legend, and labels. */
+[data-theme="mcveigh"] .recharts-cartesian-axis-tick-value,
+[data-theme="mcveigh"] .recharts-legend-item-text,
+[data-theme="mcveigh"] .recharts-label,
+[data-theme="mcveigh"] .recharts-text {
+  fill: #333333 !important;
+}

@@ -63,7 +63,7 @@ export function RestraintPanel({ inputs, onChange }: RestraintPanelProps) {
             key={mode}
             onClick={() => updateRestraint({ mode })}
             className={`flex-1 rounded px-3 py-1 border ${
-              r.mode === mode ? 'bg-blue-500 text-white' : 'bg-white'
+              r.mode === mode ? 'bg-blue-500 text-white' : 'bg-white text-gray-800'
             }`}
           >
             {mode === 'simple' ? 'Simple' : 'Advanced'}

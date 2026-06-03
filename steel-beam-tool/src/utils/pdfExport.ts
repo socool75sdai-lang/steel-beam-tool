@@ -89,11 +89,14 @@ function drawDiagram(
   // Demand curve
   doc.setDrawColor(30, 64, 175);
   doc.setLineWidth(0.3);
+  // Moment plots positive (sagging) downward to match the on-screen Recharts BMD
+  // (reversed Y axis); shear keeps its original upward-positive orientation.
+  const fieldSign = field === 'moment' ? 1 : -1;
   let prevX = originX + points[0].x * xScale;
-  let prevY = originY + height / 2 - (points[0][field] / scaleMax) * yScale;
+  let prevY = originY + height / 2 + fieldSign * (points[0][field] / scaleMax) * yScale;
   for (let i = 1; i < points.length; i++) {
     const x = originX + points[i].x * xScale;
-    const y = originY + height / 2 - (points[i][field] / scaleMax) * yScale;
+    const y = originY + height / 2 + fieldSign * (points[i][field] / scaleMax) * yScale;
     doc.line(prevX, prevY, x, y);
     prevX = x;
     prevY = y;
@@ -101,7 +104,7 @@ function drawDiagram(
 
   // Capacity reference lines (dashed, green=pass / red=fail)
   for (const ref of refLines) {
-    const ry = originY + height / 2 - (ref.value / scaleMax) * yScale;
+    const ry = originY + height / 2 + fieldSign * (ref.value / scaleMax) * yScale;
     const color: [number, number, number] = ref.pass ? [22, 163, 74] : [220, 38, 38];
     doc.setDrawColor(color[0], color[1], color[2]);
     doc.setLineWidth(0.2);
