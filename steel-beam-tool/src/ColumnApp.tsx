@@ -9,6 +9,8 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 interface ColumnAppProps {
   className?: string;
+  jobNumber?: string;
+  jobName?: string;
 }
 
 function initialColumnInputs(): ColumnInputs {
@@ -26,7 +28,7 @@ function initialColumnInputs(): ColumnInputs {
   };
 }
 
-export default function ColumnApp({ className }: ColumnAppProps) {
+export default function ColumnApp({ className, jobNumber, jobName }: ColumnAppProps) {
   const [inputs, setInputs] = useState<ColumnInputs>(initialColumnInputs);
   const results = useColumnCalculations(inputs);
 
@@ -41,7 +43,7 @@ export default function ColumnApp({ className }: ColumnAppProps) {
       </div>
       <div className="w-3/5 overflow-y-auto">
         <ErrorBoundary>
-          <ColumnResultsPanel inputs={inputs} results={results} />
+          <ColumnResultsPanel inputs={inputs} results={results} jobNumber={jobNumber} jobName={jobName} />
         </ErrorBoundary>
       </div>
     </div>

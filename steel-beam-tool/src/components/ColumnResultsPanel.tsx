@@ -9,10 +9,13 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import type { ColumnInputs, ColumnResults } from '@/types/column';
+import { exportColumnToPDF } from '@/utils/columnPdfExport';
 
 interface ColumnResultsPanelProps {
   inputs: ColumnInputs;
   results: ColumnResults;
+  jobNumber?: string;
+  jobName?: string;
 }
 
 function statusCell(pass: boolean) {
@@ -28,8 +31,17 @@ function utilCell(ratio: number) {
   return <span className={pct > 100 ? 'text-red-600 font-bold' : ''}>{pct.toFixed(1)}%</span>;
 }
 
-export function ColumnResultsPanel({ inputs, results }: ColumnResultsPanelProps) {
+export function ColumnResultsPanel({ inputs, results, jobNumber, jobName }: ColumnResultsPanelProps) {
   const im = results.intermediates;
+
+  const handleExport = () => {
+    try {
+      exportColumnToPDF(inputs, results, jobNumber, jobName);
+    } catch (err) {
+      console.error('Column PDF export failed:', err);
+      alert('PDF export failed: ' + (err instanceof Error ? err.message : String(err)));
+    }
+  };
   const hasMx = results.mStarX > 0;
   const hasMy = results.mStarY > 0;
 
@@ -198,11 +210,10 @@ export function ColumnResultsPanel({ inputs, results }: ColumnResultsPanelProps)
 
       <button
         type="button"
-        disabled
-        title="PDF export — coming in 5R4"
-        className="bg-gray-300 text-gray-500 px-4 py-2 rounded cursor-not-allowed"
+        onClick={handleExport}
+        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded mc-btn-primary"
       >
-        Export PDF (coming in 5R4)
+        Export PDF Report
       </button>
     </section>
   );

@@ -211,7 +211,11 @@ export default function App() {
         </div>
       </div>
 
-      <ColumnApp className={`flex flex-1 overflow-hidden bg-gray-50 ${activeTab === 'column' ? '' : 'hidden'}`} />
+      <ColumnApp
+        className={`flex flex-1 overflow-hidden bg-gray-50 ${activeTab === 'column' ? '' : 'hidden'}`}
+        jobNumber={jobNumber}
+        jobName={jobName}
+      />
     </div>
   );
 }
