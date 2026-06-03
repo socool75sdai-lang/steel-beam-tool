@@ -8,6 +8,7 @@ import { RestraintPanel } from '@/components/RestraintPanel';
 import { ResultsPanel } from '@/components/ResultsPanel';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { buildFilename } from '@/utils/pdfExport';
+import ColumnApp from '@/ColumnApp';
 
 function initialInputs(): DesignInputs {
   return {
@@ -34,6 +35,7 @@ function initialInputs(): DesignInputs {
 
 export default function App() {
   const [inputs, setInputs] = useState<DesignInputs>(initialInputs);
+  const [activeTab, setActiveTab] = useState<'beam' | 'column'>('beam');
   const [jobNumber, setJobNumber] = useState('');
   const [jobName, setJobName] = useState('');
   const [importMsg, setImportMsg] = useState('');
@@ -125,12 +127,18 @@ export default function App() {
         style={{ backgroundColor: 'var(--mc-green-mid)', borderBottom: '2px solid var(--mc-gold)' }}
         className="px-4 flex"
       >
-        <button
-          style={{ color: 'var(--mc-gold)', borderBottom: '2px solid var(--mc-gold)' }}
-          className="px-4 py-2 text-sm font-medium -mb-px"
-        >
-          Steel Beam
-        </button>
+        {(['beam', 'column'] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            style={activeTab === tab
+              ? { color: 'var(--mc-gold)', borderBottom: '2px solid var(--mc-gold)' }
+              : { color: 'var(--mc-gold-light)' }}
+            className="px-4 py-2 text-sm font-medium -mb-px"
+          >
+            {tab === 'beam' ? 'Steel Beam' : 'Steel Column'}
+          </button>
+        ))}
       </nav>
 
       <div
@@ -181,7 +189,9 @@ export default function App() {
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden bg-gray-50">
+      {/* Both tabs stay mounted; the inactive one is CSS-hidden so its state
+          is preserved across tab switches (no conditional unmount). */}
+      <div className={`flex flex-1 overflow-hidden bg-gray-50 ${activeTab === 'beam' ? '' : 'hidden'}`}>
         <div className="w-2/5 overflow-y-auto p-4 border-r border-gray-300">
           <GeometryPanel inputs={inputs} onChange={handleChange} />
           <LoadPanel inputs={inputs} onChange={handleChange} />
@@ -200,6 +210,8 @@ export default function App() {
           </ErrorBoundary>
         </div>
       </div>
+
+      <ColumnApp className={`flex flex-1 overflow-hidden bg-gray-50 ${activeTab === 'column' ? '' : 'hidden'}`} />
     </div>
   );
 }
