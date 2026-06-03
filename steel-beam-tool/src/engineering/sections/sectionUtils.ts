@@ -1,4 +1,4 @@
-import type { SectionType, SteelSection, SteelGrade } from '@/types';
+import type { SectionType, SteelSection, SteelGrade, HollowSteelGrade } from '@/types';
 import { SECTION_DATABASE } from './sectionDatabase';
 
 export function getSectionsByType(type: SectionType): SteelSection[] {
@@ -34,4 +34,16 @@ export function calcFy(section: SteelSection, grade: SteelGrade = 'G300'): numbe
   }
   // G300 (existing logic)
   return tf <= 17 ? 300 : 280;
+}
+
+/**
+ * AS1163 cold-formed hollow sections (SHS/RHS/CHS): fy is flat per grade,
+ * independent of wall thickness (unlike AS3678 plate grades used by calcFy).
+ */
+export function calcFyHollow(grade: HollowSteelGrade): number {
+  switch (grade) {
+    case 'C250': return 250;
+    case 'C350': return 350;
+    case 'C450': return 450;
+  }
 }

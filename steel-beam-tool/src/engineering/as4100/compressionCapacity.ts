@@ -54,7 +54,7 @@ export function calcCompressionCapacity(
  * residual-stress category (αb = 0, so the modified slenderness λ = λn).
  * Reproduces the Table 6.3.3(a) values (e.g. αc ≈ 0.22 at λn ≈ 175).
  */
-function calcAlphaC(lambdaN: number): number {
+export function calcAlphaC(lambdaN: number): number {
   if (lambdaN <= 13.5) return 1.0;
   const lambda = lambdaN; // αb = 0 for the HR category
   const eta = Math.max(0.00326 * (lambda - 13.5), 0);

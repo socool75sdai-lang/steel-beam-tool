@@ -5,6 +5,7 @@ export type SimpleRestraint = 'FF' | 'PP' | 'PF' | 'FC' | 'custom';
 export type EndRestraint = 'F' | 'P' | 'L' | 'U';
 export type SectionClass = 'compact' | 'noncompact' | 'slender';
 export type SteelGrade = 'G300' | 'G350';
+export type HollowSteelGrade = 'C250' | 'C350' | 'C450';
 export type SupportCondition = 'PP' | 'FP' | 'PF' | 'FF';
 export type ComboName = '1.2G+1.5Q' | 'G+Q' | 'G';
 export type LiveLoadType =
