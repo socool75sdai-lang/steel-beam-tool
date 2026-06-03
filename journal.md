@@ -456,3 +456,114 @@ MCP browser confirmation. No new npm packages. Evidence in `.nova/evidence/rev4/
 
 Updated the Rev 4 requirements source document (`.Improvements/Rev 4/Claude REV 4.docx`); committed
 in `92ad022` and pushed to `origin/main`. No source-code or behaviour changes.
+
+---
+
+## 2026-06-03 — Rev 5 Requirements Captured (4 items)
+
+### Context
+Requirements elicited via design interview. Handover spec written to `.Improvements/Rev 5/HANDOVER.md`.
+Not yet implemented — planning agent to produce orchestration plan before execution.
+
+### Items
+| # | Item | Status |
+|---|---|---|
+| 1 | White-on-white text fix — McVeigh theme (Restraints toggle + Recharts labels) | Specified |
+| 2 | Tab navigation — add Steel Column tab beside Steel Beam; both tabs preserve state | Specified |
+| 3 | PDF BMD orientation — currently upside-down vs main app; sign fix in pdfExport.ts | Specified |
+| 4 | Steel Column design tool (AS4100) — new tab with full column design capability | Specified |
+
+### Key decisions recorded in HANDOVER.md
+- Column section types: UC, SHS, RHS, CHS only (UB/WB/PFC/EA excluded — not used as columns)
+- Loads: G + Q unfactored axial + eccentricities e_x, e_y (mm); N* and M* computed automatically via AS1170 factored loads
+- Effective lengths: separate k_x, k_y factors × column height L → Le_x, Le_y
+- LTB: UC sections use Le_x as LTB effective length; SHS/RHS/CHS have no LTB (closed sections, φMbx = φMsx)
+- Hollow section grades: Grade 250/350/450 per AS1163 (flat fy, no thickness reduction); UC keeps Grade 300/350 per AS3678
+- Output: capacity check table + N*–M* interaction diagram for governing axis (Recharts LineChart)
+- Auto-select: lightest passing section within selected type and grade (same pattern as beam)
+- Tab state: both tabs always mounted (CSS hidden when inactive), state preserved on switch
+- PDF: 3-page (inputs + check table | interaction diagram | calc sheet with AS clause annotations)
+- Sequencing: 6 cards (5R0 → 5R4 + 5I1); 5R0 and 5R1 parallel; 5R2→5R3→5R4 sequential; no worktrees
+
+---
+
+## 2026-06-03 — Rev 5 Orchestration Planned (4 items)
+
+### Context
+Handover spec at `.Improvements\Rev 5\HANDOVER.md` received and reviewed. Four items: three
+targeted patches (white-on-white text, tab navigation, PDF BMD orientation) and one large new
+feature (Steel Column design tool, AS4100 Cl. 6 + 8, 8 new files). All decisions final —
+confirmed with engineer 2026-06-03.
+
+### Items
+| # | Item | Scope |
+|---|---|---|
+| 1 | White-on-white text fix — Recharts labels (CSS) + Restraints toggle (RestraintPanel) | Targeted patch |
+| 2 | Tab navigation — Steel Beam / Steel Column; both tabs always mounted (state preserved) | App.tsx + stub |
+| 3 | PDF BMD orientation — sign flip in drawDiagram (minus → plus for Y coordinate) | One-liner |
+| 4 | Steel Column design tool (AS4100) — new tab with full column design capability | Large feature |
+
+### Orchestration
+Five implementation cards (5R0 → 5R4) + one integration card (5I1), sequential on `main`.
+5R0 and 5R1 logically parallel (disjoint files) but executed sequentially for consistency.
+5R2 → 5R3 → 5R4 strictly sequential (types → components → PDF).
+
+Agent roles: Implementer, Critic (spec conformance, cycle-limited, no implementation),
+Test Validator (tsc + build + Playwright MCP browser visual confirmation required for every card).
+
+Kanban board at `.nova/KANBAN.md`. Card files at `.nova/cards/5R0.md`–`5I1.md`.
+Plan at `.nova/REV5-ORCHESTRATION-PLAN.md`.
+
+### Key sequencing decisions
+- 5R0 first (trivial CSS + PDF one-liner, zero risk to App state)
+- 5R1 second (App.tsx tab structure must exist before column types are written in 5R2)
+- 5R2 (pure logic: types + engineering engine, no components)
+- 5R3 (components + hook — requires types from 5R2)
+- 5R4 (PDF — requires ColumnResults shape from 5R3 to be final)
+- No worktrees — consistent with Rev 2/3/4 precedent
+
+### Key design decisions
+- Tab mounting: both tabs always mounted (CSS `hidden` class, not conditional unmount)
+- Column section types: UC, SHS, RHS, CHS only (UB/WB/PFC/EA excluded per spec)
+- Hollow grade: C250/C350/C450 per AS1163 (flat fy); UC keeps G300/G350 per AS3678
+- Column LTB: UC uses Le_x as LTB effective length; hollow: phiMbx = phiMsx (no LTB)
+- N* = max(1.2G + 1.5Q, G) — governing combo per AS1170.1
+- Eccentricities: e_y causes M*x (bending about x-axis); e_x causes M*y
+- Interaction diagram: section envelope + member envelope + design point; Recharts LineChart
+- PDF: 3-page (inputs+table | interaction diagram | calc sheet with AS clauses); ASCII only
+- No new npm packages
+
+---
+
+## 2026-06-03 — Rev 5 Implementation Complete (all 6 cards DONE)
+
+### Outcome
+All five implementation cards (5R0–5R4) plus the integration card (5I1) executed
+sequentially on `main`. `npx tsc --noEmit` -> 0 errors and `npm run build` -> clean
+after every card. All browser + PDF QA gates green.
+
+### Commits
+| Card | Commit | Scope |
+|---|---|---|
+| 5R0 | a5493a0 | index.css Recharts fill (#333333) + RestraintPanel toggle text-gray-800 + pdfExport BMD sign flip (field-conditional: moment sagging-down, shear unchanged) |
+| 5R1 | f1baa7c | App.tsx activeTab + two-tab nav + both tabs mounted (CSS hidden); ColumnApp.tsx stub |
+| 5R2 | 9ee0572 | types/column.ts; columnCapacity.ts evaluateColumn (AS4100 Cl.6+8, 8 checks); calcFyHollow; HollowSteelGrade; exported calcAlphaC |
+| 5R3 | d06a7a3 | ColumnGeometryPanel/LoadPanel/ResultsPanel, useColumnCalculations, full ColumnApp (interaction chart, auto-select, conditional grade dropdown) |
+| 5R4 | b4008e0 | columnPdfExport.ts (3-page, ASCII-only, jsPDF interaction diagram); wired Export button; threaded jobNumber/jobName App->ColumnApp->ResultsPanel |
+
+### Verification highlights
+- Spot-check 200UC52.2 (L=4m, G=200, Q=150, e_y=50, G350) live in UI matched hand-calc
+  exactly: N*=465.0 kN, phiNs=2038.0, phiNc_x=1730.0, phiNc_y=1236.1, phiMsx=174.06,
+  ratios 0.362/0.510/0.560, class noncompact, fy=340 MPa — all PASS.
+- McVeigh Recharts text computed fill = rgb(51,51,51); Restraints inactive toggle dark on white.
+- Tab state preserved: beam span 12.5 m survived a column round-trip.
+- Auto-select picked 200UC46.2 (lightest passing UC); SHS switch -> grade dropdown 250/350/450.
+- Column PDFs: UC -> 3 pages with full LTB working; SHS -> "No LTB - closed section" on step 5;
+  both ASCII-only with AS clause tags. Beam PDF regression -> still 3 pages (BMD/SFD/calc sheet).
+
+### Implementation note (5R0 nuance)
+drawDiagram is shared by BMD and SFD. To satisfy both gates (BMD peak downward AND SFD
+positive-shear above baseline) the sign was made field-conditional (moment +1, shear -1)
+rather than an unconditional minus->plus, so the SFD output is byte-identical to pre-fix.
+
+Evidence: `.nova/evidence/rev5/`. Board: `.nova/KANBAN.md`. Cards: `.nova/cards/5R0.md`–`5I1.md`.
