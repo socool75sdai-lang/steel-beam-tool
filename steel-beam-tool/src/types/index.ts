@@ -68,7 +68,10 @@ export interface RestraintConfig {
   leMultiplier: number;
   endA: EndRestraint;
   endB: EndRestraint;
-  intermediate: number[];
+  // Rev 6 (Item 1): intermediate restraints split per flange. Only the
+  // compression-flange restraints in a given segment reduce its LTB length.
+  intermediateTop: number[];
+  intermediateBottom: number[];
   alphaMOverride: number | null;
 }
 
@@ -118,6 +121,11 @@ export interface DesignIntermediates {
   alphaM: number;
   alphaS: number;
   phiMbx: number;
+  // Rev 6 (Item 1): governing LTB segment (lowest φMbx across both flange passes).
+  govSegStart: number; // m, governing segment start position
+  govSegEnd: number; // m, governing segment end position
+  govFlange: 'top' | 'bottom'; // compression flange of the governing segment
+  bottomFlangeNoEffect: boolean; // true when bottom restraints exist but carry no compression (plain sagging)
   Aw: number;
   dOnTw: number;
   slenderLimit: number;

@@ -30,11 +30,10 @@ function restraintSummary(r: DesignInputs['restraint']): string {
   if (r.mode === 'simple') {
     return `simple ${r.simpleType} (Le mult ${r.leMultiplier.toFixed(2)})`;
   }
-  const inter =
-    r.intermediate.length > 0
-      ? `, intermediate at [${r.intermediate.map((v) => v.toFixed(2)).join(', ')}] m`
-      : '';
-  return `advanced ${r.endA}-${r.endB}${inter}`;
+  const fmt = (a: number[]) => `[${a.map((v) => v.toFixed(2)).join(', ')}] m`;
+  const top = r.intermediateTop.length > 0 ? `, top-flange restraints at ${fmt(r.intermediateTop)}` : '';
+  const bot = r.intermediateBottom.length > 0 ? `, bottom-flange restraints at ${fmt(r.intermediateBottom)}` : '';
+  return `advanced ${r.endA}-${r.endB}${top}${bot}`;
 }
 
 function fmtExp(value: number): string {
@@ -574,8 +573,14 @@ export async function exportToPDF(args: PdfExportArgs): Promise<void> {
   };
   const supportLines = [
     `Support: ${supportLabel[im.supportCondition] ?? im.supportCondition}`,
-    `Le = ${im.Le.toFixed(2)} m`,
+    `Governing LTB segment: ${im.govSegStart.toFixed(2)}-${im.govSegEnd.toFixed(2)} m (${im.govFlange} flange in compression)`,
+    `Le = ${im.Le.toFixed(2)} m  (lowest phiMbx across top/bottom flange passes, not the longest segment)`,
   ];
+  if (im.bottomFlangeNoEffect) {
+    supportLines.push(
+      'Note: no hogging - bottom-flange restraints carry no compression and do not affect Le (plain sagging beam, as intended).',
+    );
+  }
   if (im.supportCondition !== 'PP') {
     supportLines.push(
       `End moments (1.2G+1.5Q): M_A = ${im.femA.toFixed(1)} kN.m, M_B = ${im.femB.toFixed(1)} kN.m  (hogging)`,

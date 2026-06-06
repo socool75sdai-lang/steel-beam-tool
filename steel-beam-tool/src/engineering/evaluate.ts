@@ -8,10 +8,7 @@ import {
 import { calcShearCapacity } from '@/engineering/as4100/shearCapacity';
 import { calcCompressionCapacity } from '@/engineering/as4100/compressionCapacity';
 import { calcDeflection, calcDeflectionProfile } from '@/engineering/as4100/deflection';
-import {
-  calcEffectiveLength,
-  calcAlphaM,
-} from '@/engineering/as4100/effectiveLength';
+import { buildLtbSegments } from '@/engineering/as4100/effectiveLength';
 import { getPsiL, LIVE_LOAD_LABELS } from '@/engineering/as1170/psiFactors';
 
 export interface EvaluationResult {
@@ -25,12 +22,47 @@ export function evaluateDesign(inputs: DesignInputs): EvaluationResult {
   const dead = analyseBeam(inputs, COMBOS[2]); // G
 
   const fy = calcFy(inputs.section, inputs.steelGrade);
-  const Le_m = calcEffectiveLength(inputs.span, inputs.restraint);
-  const alphaM =
-    inputs.restraint.alphaMOverride ?? calcAlphaM(factored.bmd, 0, inputs.span);
 
   const secCap = calcSectionCapacity(inputs.section, fy);
-  const memCap = calcMemberCapacity(inputs.section, fy, Le_m * 1000, alphaM);
+
+  // Rev 6 (Item 1): per-compression-flange governing-segment LTB. Compute φMbx
+  // for every restrained compression-flange segment using its own Le and αm, and
+  // take the segment with the lowest φMbx (highest utilisation) — not merely the
+  // longest. The global αm override, if set, replaces the governing segment's αm.
+  const { segments, bottomFlangeNoEffect } = buildLtbSegments(
+    inputs.span,
+    inputs.restraint,
+    factored.bmd,
+  );
+  let gov = {
+    Le: 0,
+    alphaM: 1.0,
+    alphaS: 1.0,
+    Moa: Infinity,
+    phiMbx: Infinity,
+    start: 0,
+    end: inputs.span,
+    flange: 'top' as 'top' | 'bottom',
+  };
+  for (const seg of segments) {
+    const segAlphaM = inputs.restraint.alphaMOverride ?? seg.alphaM;
+    const cap = calcMemberCapacity(inputs.section, fy, seg.Le * 1000, segAlphaM);
+    if (cap.phiMbx < gov.phiMbx) {
+      gov = {
+        Le: seg.Le,
+        alphaM: segAlphaM,
+        alphaS: cap.alphaS,
+        Moa: cap.Moa,
+        phiMbx: cap.phiMbx,
+        start: seg.start,
+        end: seg.end,
+        flange: seg.flange,
+      };
+    }
+  }
+  const Le_m = gov.Le;
+  const alphaM = gov.alphaM;
+  const memCap = { Moa: gov.Moa, alphaS: gov.alphaS, phiMbx: gov.phiMbx };
   const shear = calcShearCapacity(inputs.section, fy);
 
   const psiL = getPsiL(inputs.liveLoadType);
@@ -89,6 +121,10 @@ export function evaluateDesign(inputs: DesignInputs): EvaluationResult {
     alphaM,
     alphaS: memCap.alphaS,
     phiMbx: memCap.phiMbx,
+    govSegStart: gov.start,
+    govSegEnd: gov.end,
+    govFlange: gov.flange,
+    bottomFlangeNoEffect,
     Aw: shear.Aw,
     dOnTw: shear.dOnTw,
     slenderLimit: shear.slenderLimit,

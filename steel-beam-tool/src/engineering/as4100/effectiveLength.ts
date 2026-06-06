@@ -39,45 +39,129 @@ function simpleMultiplier(restraint: RestraintConfig): number {
 }
 
 /**
- * Returns Le in metres given the span (m) and restraint configuration.
- * Uses the longest unsupported segment length when intermediate restraints are present.
+ * A candidate lateral-torsional-buckling segment: a length of beam between two
+ * restraint points whose compression flange is restrained at both ends. `flange`
+ * is the compression flange over the segment (from the BMD sign); `Le` already
+ * includes the end-pair effective-length multiplier; `alphaM` is the segment's
+ * own moment-modification factor.
  */
-export function calcEffectiveLength(span_m: number, restraint: RestraintConfig): number {
-  if (!Number.isFinite(span_m) || span_m <= 0) return 0;
+export interface LtbSegment {
+  start: number; // m
+  end: number; // m
+  flange: 'top' | 'bottom';
+  Le: number; // m
+  alphaM: number;
+}
 
+/**
+ * Signed moment of largest magnitude within [a, b] (m). Positive = sagging
+ * (top flange in compression); negative = hogging (bottom flange in compression).
+ */
+function segmentPeakSignedMoment(bmd: DiagramPoint[], a: number, b: number): number {
+  const tol = 1e-9;
+  let peak = interpolateMoment(bmd, a);
+  const consider = (m: number): void => {
+    if (Math.abs(m) > Math.abs(peak)) peak = m;
+  };
+  consider(interpolateMoment(bmd, b));
+  for (const p of bmd) {
+    if (p.x >= a - tol && p.x <= b + tol) consider(p.moment);
+  }
+  return peak;
+}
+
+/** Restraint type at a boundary x: span ends use endA/endB, interior points act as 'F'. */
+function boundaryType(x: number, span: number, endA: EndRestraint, endB: EndRestraint): EndRestraint {
+  const tol = 1e-9;
+  if (Math.abs(x) <= tol) return endA;
+  if (Math.abs(x - span) <= tol) return endB;
+  return 'F';
+}
+
+/**
+ * Build the governing-segment LTB candidates (Rev 6, Item 1). Each flange's
+ * intermediate restraints segment the beam independently; a segment is a real
+ * LTB candidate only where its compression flange is the restrained one:
+ *  - top-flange restraints govern sagging (M > 0) segments,
+ *  - bottom-flange restraints govern hogging (M < 0) segments.
+ * For a plain PP sagging beam every bottom-flange segment is sagging and is
+ * therefore skipped (tension flange) — `bottomFlangeNoEffect` flags this so the
+ * results read as intended rather than as a bug.
+ *
+ * Simple mode reproduces the legacy single-segment behaviour (whole-span Le and
+ * αm) so nothing changes there.
+ */
+export function buildLtbSegments(
+  span_m: number,
+  restraint: RestraintConfig,
+  bmd: DiagramPoint[],
+): { segments: LtbSegment[]; bottomFlangeNoEffect: boolean } {
+  if (!Number.isFinite(span_m) || span_m <= 0) {
+    return { segments: [{ start: 0, end: 0, flange: 'top', Le: 0, alphaM: 1.0 }], bottomFlangeNoEffect: false };
+  }
+
+  // Simple mode: one whole-span segment, Le = span × simple multiplier.
   if (restraint.mode === 'simple') {
-    return span_m * simpleMultiplier(restraint);
+    const peak = segmentPeakSignedMoment(bmd, 0, span_m);
+    return {
+      segments: [
+        {
+          start: 0,
+          end: span_m,
+          flange: peak < 0 ? 'bottom' : 'top',
+          Le: span_m * simpleMultiplier(restraint),
+          alphaM: calcAlphaM(bmd, 0, span_m),
+        },
+      ],
+      bottomFlangeNoEffect: false,
+    };
   }
 
-  // advanced
-  const intermediate = (restraint.intermediate ?? [])
-    .filter((x) => Number.isFinite(x) && x > 0 && x < span_m)
-    .slice()
-    .sort((a, b) => a - b);
+  const { endA, endB } = restraint;
 
-  if (intermediate.length === 0) {
-    return span_m * endPairMultiplier(restraint.endA, restraint.endB);
-  }
-
-  const points = [0, ...intermediate, span_m];
-  let maxLe = 0;
-  for (let i = 0; i < points.length - 1; i++) {
-    const segLen = points[i + 1] - points[i];
-    let mult: number;
-    if (i === 0) {
-      // first segment: endA -> F (intermediate treated as F)
-      mult = endPairMultiplier(restraint.endA, 'F');
-    } else if (i === points.length - 2) {
-      // last segment: F -> endB
-      mult = endPairMultiplier('F', restraint.endB);
-    } else {
-      // inner segment: F -> F
-      mult = 1.0;
+  // Build the segments for one flange pass; include a segment only where its
+  // compression flange matches the pass's flange.
+  const passSegments = (intermediate: number[], flange: 'top' | 'bottom'): LtbSegment[] => {
+    const pts = [0, span_m, ...intermediate.filter((x) => Number.isFinite(x) && x > 0 && x < span_m)]
+      .slice()
+      .sort((a, b) => a - b);
+    // de-duplicate
+    const uniq = pts.filter((x, i) => i === 0 || Math.abs(x - pts[i - 1]) > 1e-9);
+    const out: LtbSegment[] = [];
+    for (let i = 0; i < uniq.length - 1; i++) {
+      const a = uniq[i];
+      const b = uniq[i + 1];
+      const peak = segmentPeakSignedMoment(bmd, a, b);
+      const compFlange = peak < 0 ? 'bottom' : 'top';
+      if (compFlange !== flange) continue;
+      const mult = endPairMultiplier(
+        boundaryType(a, span_m, endA, endB),
+        boundaryType(b, span_m, endA, endB),
+      );
+      out.push({ start: a, end: b, flange, Le: (b - a) * mult, alphaM: calcAlphaM(bmd, a, b) });
     }
-    const segLe = segLen * mult;
-    if (segLe > maxLe) maxLe = segLe;
+    return out;
+  };
+
+  const topSegments = passSegments(restraint.intermediateTop ?? [], 'top');
+  const bottomSegments = passSegments(restraint.intermediateBottom ?? [], 'bottom');
+  const bottomFlangeNoEffect = (restraint.intermediateBottom ?? []).length > 0 && bottomSegments.length === 0;
+
+  const segments = [...topSegments, ...bottomSegments];
+  if (segments.length === 0) {
+    // Degenerate fallback (e.g. an all-hogging span with no bottom restraints):
+    // a single whole-span segment using the end-pair multiplier.
+    const peak = segmentPeakSignedMoment(bmd, 0, span_m);
+    segments.push({
+      start: 0,
+      end: span_m,
+      flange: peak < 0 ? 'bottom' : 'top',
+      Le: span_m * endPairMultiplier(endA, endB),
+      alphaM: calcAlphaM(bmd, 0, span_m),
+    });
   }
-  return maxLe;
+
+  return { segments, bottomFlangeNoEffect };
 }
 
 function interpolateMoment(bmd: DiagramPoint[], targetX: number): number {

@@ -191,7 +191,8 @@ export function ResultsPanel({ inputs, results, diagrams, onDeflLimitsChange, jo
       <p className="text-xs mc-subtle mb-4">
         Section class: {results.sectionClass} · fy = {results.fy} MPa · Le ={' '}
         {(results.Le / 1000).toFixed(2)} m · αm = {results.alphaM.toFixed(2)} · αs ={' '}
-        {results.alphaS.toFixed(2)}
+        {results.alphaS.toFixed(2)} · governing segment {im.govSegStart.toFixed(2)}–
+        {im.govSegEnd.toFixed(2)} m ({im.govFlange} flange in compression)
       </p>
 
       <button
@@ -228,6 +229,19 @@ export function ResultsPanel({ inputs, results, diagrams, onDeflLimitsChange, jo
               Any element providing full, partial or lateral restraint must be designed to transfer 2.5% of
               the critical flange force (Cl. 5.4.3.1).
             </p>
+            <p>
+              Governing LTB segment: {im.govSegStart.toFixed(2)}–{im.govSegEnd.toFixed(2)} m
+              ({im.govFlange} flange in compression) — lowest φM_bx across both flange passes
+              (Cl. 5.6). Top-flange restraints segment sagging regions; bottom-flange restraints
+              segment hogging regions.
+            </p>
+            {im.bottomFlangeNoEffect && (
+              <p className="italic text-gray-500">
+                Note: no hogging regions in this span, so the bottom-flange restraints carry no
+                compression and have no effect on Le (tension flange). This is expected for a plain
+                sagging beam, not a bug.
+              </p>
+            )}
             <p className="italic text-gray-500">
               Segment assumed bent in single curvature, not subject to transverse loads — β_m = −1.0 per
               Cl. 5.3.2.4(a). Conservative; can be refined using the α_m override.
