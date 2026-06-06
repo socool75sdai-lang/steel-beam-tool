@@ -655,3 +655,41 @@ Board `.nova/KANBAN.md`; cards `.nova/cards/6R0.md`-`6I1.md`; plan
 ### Open items flagged to engineer (see plan section 8)
 JSON Save/Load stays beam-only (Brace excluded) - confirm. psi_c values vs AS1170.0 Table 4.1 for
 any ambiguous live-load category - confirm.
+
+---
+
+## 2026-06-06 — Rev 6 Complete (4 items shipped)
+
+All seven cards DONE on `main` (6R0 a6f4d3d, 6R1 288f35b, 6R2 6d5ae7f, 6R3 4110e94, 6R4 813c7cd,
+6R5 06ee913, 6I1 integration). Each gated with `npx tsc --noEmit` (0 errors) + `npm run build`
+(clean); browser + PDF QA via Playwright MCP.
+
+### Delivered
+- **Item 1** — Beam intermediate restraint split into top-flange + bottom-flange counts (Advanced
+  mode). New per-compression-flange governing-segment LTB: each flange's restraints segment the beam
+  independently, a segment is evaluated only where that flange is in compression (sagging->top,
+  hogging->bottom from the factored BMD sign), and the governing segment is the lowest-phiMbx one
+  (own Le + own alpha_m), not the longest. RestraintConfig.intermediate replaced by
+  intermediateTop/intermediateBottom (clean break). Results + beam PDF show the governing segment
+  range/flange; PP plain-sagging emits the "bottom restraints carry no compression" note.
+- **Item 2** — New Steel Brace tab: horizontal beam-column per AS4100 Cl. 6 + 8.3/8.4, reusing the
+  column hollow path. Single factored N* in all combos; major-axis bending = self-weight UDL +
+  signed-Wind/G/Q point loads, worst of 3 combos (1.2G+1.5Q | 1.2G+Wu+psi_c.Q | 0.9G+Wu);
+  phiMbx=phiMsx (closed); self-weight L/limit deflection. Auto-lightest searches the full
+  {CHS,SHS,RHS}x{C250,C350,C450} matrix. Three graphs + 3-page ASCII PDF. psi_c added to psiFactors.
+- **Item 3** — On-screen "Show calculations" collapsible for Column and Brace, reading identically
+  to their PDF calc sheets.
+- **Item 4** — Class-based .mc-subtle recolours the grey-on-green summary lines to cream under
+  [data-theme=mcveigh]; white-bg calc/table/Recharts text stays dark; Light theme byte-identical.
+
+### Verification (6I1)
+Item 1: PP bottom restraints no effect (+note), top restraints Le 6.00->2.00 m + phiMbx rise, FF
+bottom restraints govern the hogging end (segment 0-2 m). Item 2: live engine matched hand-calc
+exactly; auto-lightest global; 3 graphs; 3-page PDF. Item 3: column/brace collapsibles match tables.
+Item 4: cream on green, dark on white, Light unchanged. No new npm packages; beam+column PDFs
+regress clean.
+
+### Open items still flagged to engineer
+- JSON Save/Load remains beam-only (Brace + Column excluded) — confirm if cross-tab save/load wanted.
+- psi_c values use AS1170.0 Table 4.1 (floor categories = their psi_l; roof 0.0) — confirm exact
+  psi_c for any ambiguous live-load category (e.g. parking/storage) against the engineer's reference.
