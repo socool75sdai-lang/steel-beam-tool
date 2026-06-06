@@ -693,3 +693,7 @@ regress clean.
 - JSON Save/Load remains beam-only (Brace + Column excluded) — confirm if cross-tab save/load wanted.
 - psi_c values use AS1170.0 Table 4.1 (floor categories = their psi_l; roof 0.0) — confirm exact
   psi_c for any ambiguous live-load category (e.g. parking/storage) against the engineer's reference.
+
+### Pushed to remote
+2026-06-06 — all eight Rev 6 commits pushed to `origin/main` (`4d2181f..97e1418`,
+github.com/socool75sdai-lang/steel-beam-tool). Working tree clean.
