@@ -152,7 +152,7 @@ export function ColumnResultsPanel({ inputs, results, jobNumber, jobName }: Colu
         </tbody>
       </table>
 
-      <p className="text-xs text-gray-600 mb-4">
+      <p className="text-xs mc-subtle mb-4">
         Section class: {im.sectionClass} &middot; fy = {im.fy} MPa &middot; Le_x = {im.LeX.toFixed(2)} m
         &middot; Le_y = {im.LeY.toFixed(2)} m
       </p>

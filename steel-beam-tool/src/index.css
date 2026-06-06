@@ -69,6 +69,14 @@ body {
   background-color: #ffffff;
 }
 
+/* Subtle helper/caption text. Class-based so it never bleeds onto white
+   backgrounds: gray-600 in the Light theme, cream on the dark-green McVeigh
+   panels (Item 4 — fixes the low-contrast grey-on-green summary/caption lines).
+   Apply ONLY to grey text sitting directly on the green panel — never to the
+   calc box, table cells, or Recharts text, which sit on white and stay dark. */
+.mc-subtle { color: #4b5563; }
+[data-theme="mcveigh"] .mc-subtle { color: var(--mc-cream); }
+
 /* Recharts SVG text inherits the cream panel colour and disappears against the
    white chart canvas. Force dark ink for axis ticks, legend, and labels. */
 [data-theme="mcveigh"] .recharts-cartesian-axis-tick-value,

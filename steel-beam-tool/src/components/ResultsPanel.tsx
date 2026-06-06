@@ -188,7 +188,7 @@ export function ResultsPanel({ inputs, results, diagrams, onDeflLimitsChange, jo
         </tbody>
       </table>
 
-      <p className="text-xs text-gray-600 mb-4">
+      <p className="text-xs mc-subtle mb-4">
         Section class: {results.sectionClass} · fy = {results.fy} MPa · Le ={' '}
         {(results.Le / 1000).toFixed(2)} m · αm = {results.alphaM.toFixed(2)} · αs ={' '}
         {results.alphaS.toFixed(2)}
