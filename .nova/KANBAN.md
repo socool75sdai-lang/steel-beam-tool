@@ -1,16 +1,18 @@
-# Rev 5 Kanban Board — Steel Beam Design Tool
+# Rev 6 Kanban Board — Steel Beam Design Tool
 
-Pull model: `BACKLOG → READY → IN_PROGRESS → CRITIC_REVIEW → QA → DONE` (or `BLOCKED`).
-Execution mode: single-agent direct execution on `main`. Plan: `.nova/REV5-ORCHESTRATION-PLAN.md`.
+Pull model: BACKLOG → READY → IN_PROGRESS → CRITIC_REVIEW → QA → DONE (or BLOCKED).
+Execution mode: single-track sequential on `main`. Plan: `.nova/REV6-ORCHESTRATION-PLAN.md`.
+Roles: Implementer → Critic (spec review) → Validator (browser-MCP visual confirmation).
 
 | Card | Title | Column | Branch | Commit |
 |------|-------|--------|--------|--------|
-| 5R0 | CSS text fix + PDF BMD flip (Items 1+3) | DONE | (main) | a5493a0 |
-| 5R1 | Tab navigation + ColumnApp stub (Item 2) | DONE | (main) | f1baa7c |
-| 5R2 | Column types + engineering (Item 4a) | DONE | (main) | 9ee0572 |
-| 5R3 | Column components + hook (Item 4b) | DONE | (main) | d06a7a3 |
-| 5R4 | Column PDF export (Item 4c) | DONE | (main) | b4008e0 |
-| 5I1 | Integration — verification + final visual QA | DONE | (main) | — |
+| 6R0 | Grey->cream helper text (McVeigh, all tabs) — Item 4 | READY | (main) | — |
+| 6R1 | Beam top/bottom flange restraints + governing-segment LTB — Item 1 | BACKLOG | (main) | — |
+| 6R2 | Column "Show calculations" collapsible — Item 3 | BACKLOG | (main) | — |
+| 6R3 | Brace types + engine + psi_c — Item 2 | BACKLOG | (main) | — |
+| 6R4 | Brace UI + hook + tab + graphs + collapsible — Item 2/3 | BACKLOG | (main) | — |
+| 6R5 | Brace PDF (3-page ASCII) — Item 2 | BACKLOG | (main) | — |
+| 6I1 | Integration QA — all four items, browser + PDF evidence | BACKLOG | (main) | — |
 
-All cards DONE (2026-06-03). tsc 0 errors, build clean, all browser/PDF QA gates green.
-Evidence: `.nova/evidence/rev5/`.
+6R1 -> READY when 6R0 DONE; 6R2 when 6R1 DONE; 6R3 when 6R2 DONE; 6R4 when 6R3 DONE;
+6R5 when 6R4 DONE; 6I1 when 6R5 DONE.

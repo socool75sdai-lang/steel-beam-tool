@@ -567,3 +567,91 @@ positive-shear above baseline) the sign was made field-conditional (moment +1, s
 rather than an unconditional minus->plus, so the SFD output is byte-identical to pre-fix.
 
 Evidence: `.nova/evidence/rev5/`. Board: `.nova/KANBAN.md`. Cards: `.nova/cards/5R0.md`–`5I1.md`.
+
+---
+
+## 2026-06-06 — Rev 6 Requirements Captured (4 items)
+
+### Context
+Requirements elicited via design interview (grill-me). Handover spec written to
+`.Improvements/Rev 6/HANDOVER.md`. Reference images at `.Improvements/Rev 6/1.jpg` (restraints panel)
+and `3.jpg` (results summary line + grey text). **Not yet implemented** — planning agent to produce an
+orchestration plan before execution. All decisions below confirmed final with the engineer.
+
+### Items
+| # | Item | Type | Status |
+|---|---|---|---|
+| 1 | Split single intermediate-restraint field into separate **top** and **bottom** flange restraint counts (Steel Beam) | Engineering + UI | Specified |
+| 2 | New **Steel Brace** tab — horizontal beam-column per AS4100 (Cl. 6 + 8.3/8.4) | Large new feature | Specified |
+| 3 | On-screen **"Show calculations" collapsible** added to Steel Column and Steel Brace (parity with beam) | UI | Specified |
+| 4 | Grey helper text → **cream** on the dark green panels, all three tabs (scoped, no white-on-white) | CSS polish | Specified |
+
+### Key decisions recorded in HANDOVER.md
+- **Item 1:** two count fields (top/bottom), Advanced mode only, each auto-evenly-spaced as today. LTB uses
+  the **critical (compression) flange per segment** from BMD sign (top governs sagging, bottom governs
+  hogging/uplift); bottom-flange restraints have no effect on a plain PP sagging beam (noted in calc).
+  **Governing segment = lowest φMbx** (per-segment capacity loop, not longest segment); display governing
+  bay's Le/αm/αs + position. Schema `intermediate` → `intermediateTop`/`intermediateBottom`, **no back-compat**
+  (old exported files were tests, won't be re-imported).
+- **Item 2 (Brace):** compression + **major-axis bending only**, Cl. 8.3/8.4 interaction reusing the Column
+  engine. **Single ultimate N\*** applied in all combos. Bending M\* from self-weight + **G/Q/Wind** point
+  loads via 3 combos (`1.2G+1.5Q`, `1.2G+Wu+ψc·Q`, `0.9G+Wu`). **Self-weight deflection ≤ L/360** (editable).
+  **kx/ky** effective-length factors × span; φNc both axes. **CHS/SHS/RHS × C250/C350/C450**, default
+  **CHS/C350**, no LTB (closed). Auto-lightest **searches the full type×grade matrix** (deviation from
+  beam/column, which search within selected type). **Three graphs** (N–M interaction + BMD + deflection),
+  3-page ASCII PDF. Tab order **Beam | Column | Brace**, all mounted. ψc from a new live-load dropdown
+  (extend `psiFactors`).
+- **Item 3:** add beam-style collapsible to Column (reads existing `ColumnIntermediates`) and Brace; keep
+  Column PDF calc sheet and keep on-screen text consistent with it.
+- **Item 4:** recolour grey text to cream **only where it sits on the green panel**, scoped to
+  `[data-theme="mcveigh"]`; leave calc-box/table/Recharts text dark (no white-on-white); Light theme
+  unaffected; all three tabs.
+
+### Suggested sequencing (in HANDOVER, for planning agent)
+Strictly sequential on `main` (Rev 2–5 precedent): 6R0 (Item 4 CSS) → 6R1 (Item 1) → 6R2 (Item 3 Column
+collapsible) → 6R3 (Brace engine+types) → 6R4 (Brace UI+hook, incl. its collapsible) → 6R5 (Brace PDF) →
+6I1 (integration QA). Each gated with tsc + build + Playwright MCP. No new npm packages.
+
+### Open assumptions flagged (not yet confirmed)
+- JSON Save/Load stays **beam-only** (Column already excluded; Brace assumed likewise).
+- ψc values from AS1170.0 Table 4.1.
+
+---
+
+## 2026-06-06 — Rev 6 Orchestration Planned (4 items)
+
+### Context
+Handover at `.Improvements/Rev 6/HANDOVER.md` reviewed (decisions final, captured via grill-me).
+Four items: (1) split beam intermediate restraint into top/bottom-flange counts with
+per-compression-flange governing-segment LTB (lowest-phiMbx governs, not longest); (2) new Steel
+Brace tab — horizontal beam-column per AS4100 Cl. 6 + 8.3/8.4, reusing the Column engine; (3)
+on-screen "Show calculations" collapsible for Column and Brace; (4) grey helper text -> cream on the
+dark-green McVeigh panels, all three tabs.
+
+### Orchestration
+Seven cards (6R0 -> 6R5 + 6I1), strictly sequential on `main`, no worktrees (Rev 2-5 precedent).
+6R0 CSS (zero risk) -> 6R1 beam restraint rework -> 6R2 column collapsible -> 6R3 brace engine+types
++psi_c -> 6R4 brace UI+graphs+collapsible+tab -> 6R5 brace PDF -> 6I1 integration QA.
+
+Roles: Implementer; Critic subagent (spec/code review, no fixes, cycle-limited); Validator subagent
+(tsc + build + Playwright-MCP browser visual confirmation of each issue resolved, every card).
+Board `.nova/KANBAN.md`; cards `.nova/cards/6R0.md`-`6I1.md`; plan
+`.nova/REV6-ORCHESTRATION-PLAN.md`; evidence `.nova/evidence/rev6/`.
+
+### Key design decisions
+- Item 1: RestraintConfig.intermediate REPLACED by intermediateTop[]+intermediateBottom[] (clean
+  break, no migration shim). Compression flange per segment from BMD sign (sagging->top, hogging
+  ->bottom). Governing segment = lowest phiMbx (own Le + own alphaM). PP plain sagging -> bottom
+  restraints have no effect (note emitted).
+- Item 2: single factored N* applied in all combos; major-axis bending only (M*y=0); 3 combos
+  (1.2G+1.5Q | 1.2G+Wu+psi_c.Q | 0.9G+Wu), worst |M*|; closed section -> phiMbx=phiMsx; deflection
+  from self-weight only vs editable L/limit (default 360); auto-lightest searches the FULL matrix
+  {CHS,SHS,RHS}x{C250,C350,C450}; psi_c added to psiFactors (AS1170.0 Table 4.1).
+- Item 3: collapsibles read existing intermediates; on-screen text reads identically to the PDF.
+- Item 4: class-based .mc-subtle (gray-600 in Light, cream under [data-theme="mcveigh"]); only
+  grey-on-green elements reclassed; white-bg + Recharts text stay dark.
+- No new npm packages.
+
+### Open items flagged to engineer (see plan section 8)
+JSON Save/Load stays beam-only (Brace excluded) - confirm. psi_c values vs AS1170.0 Table 4.1 for
+any ambiguous live-load category - confirm.

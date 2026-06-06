@@ -26,8 +26,8 @@ __ Phase 2
 
 __ Phase 3
 
-1. With the output deflection checks, change the G+Q combination to G+ylQ (dead + long term factored live load) according to AS1170. Where the loads are inputted add a section to confirm the live load type. i.e storage and have the corresponding factor used in the deflection check.
-2. in the load input section, with regards to the point loading. change the load location from a distance to % of span. i.e. 50% is half of the nominated span.
-3. With regards to the PDF export page, there is output text that is overlapping with other text. please correct this.
-4. With regards to the PDF export page, have the graphs display the same as within the main app output page.
+1. With the output deflection checks, change the G+Q combination to G+ylQ (dead + long term factored live load) according to AS1170. Where the loads are inputted add a section to confirm the live load type. i.e storage and have the corresponding factor used in the deflection check. "C:\Users\socoo\.projects\01 Steel Beam\.Improvements\Rev 3\1.jpg"
+2. in the load input section, with regards to the point loading. change the load location from a distance to % of span. i.e. 50% is half of the nominated span. "C:\Users\socoo\.projects\01 Steel Beam\.Improvements\Rev 3\2.jpg"
+3. With regards to the PDF export page, there is output text that is overlapping with other text. please correct this. "C:\Users\socoo\.projects\01 Steel Beam\.Improvements\Rev 3\3.jpg"
+4. With regards to the PDF export page, have the graphs display the same as within the main app output page. "C:\Users\socoo\.projects\01 Steel Beam\.Improvements\Rev 3\4.jpg"
 5. With regards to the pdf export page, can you add a section after the current output that summarises the design calculations performed and each calc notes the corresponding Australian standard clause it complies with. i.e. calc - [AS4100 6.6.1]
