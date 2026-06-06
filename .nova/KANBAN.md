@@ -8,8 +8,8 @@ Roles: Implementer → Critic (spec review) → Validator (browser-MCP visual co
 |------|-------|--------|--------|--------|
 | 6R0 | Grey->cream helper text (McVeigh, all tabs) — Item 4 | DONE | (main) | a6f4d3d |
 | 6R1 | Beam top/bottom flange restraints + governing-segment LTB — Item 1 | DONE | (main) | 288f35b |
-| 6R2 | Column "Show calculations" collapsible — Item 3 | READY | (main) | — |
-| 6R3 | Brace types + engine + psi_c — Item 2 | BACKLOG | (main) | — |
+| 6R2 | Column "Show calculations" collapsible — Item 3 | DONE | (main) | 6d5ae7f |
+| 6R3 | Brace types + engine + psi_c — Item 2 | READY | (main) | — |
 | 6R4 | Brace UI + hook + tab + graphs + collapsible — Item 2/3 | BACKLOG | (main) | — |
 | 6R5 | Brace PDF (3-page ASCII) — Item 2 | BACKLOG | (main) | — |
 | 6I1 | Integration QA — all four items, browser + PDF evidence | BACKLOG | (main) | — |
