@@ -9,6 +9,7 @@ import { ResultsPanel } from '@/components/ResultsPanel';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { buildFilename } from '@/utils/pdfExport';
 import ColumnApp from '@/ColumnApp';
+import BraceApp from '@/BraceApp';
 
 function initialInputs(): DesignInputs {
   return {
@@ -36,7 +37,7 @@ function initialInputs(): DesignInputs {
 
 export default function App() {
   const [inputs, setInputs] = useState<DesignInputs>(initialInputs);
-  const [activeTab, setActiveTab] = useState<'beam' | 'column'>('beam');
+  const [activeTab, setActiveTab] = useState<'beam' | 'column' | 'brace'>('beam');
   const [jobNumber, setJobNumber] = useState('');
   const [jobName, setJobName] = useState('');
   const [importMsg, setImportMsg] = useState('');
@@ -128,7 +129,7 @@ export default function App() {
         style={{ backgroundColor: 'var(--mc-green-mid)', borderBottom: '2px solid var(--mc-gold)' }}
         className="px-4 flex"
       >
-        {(['beam', 'column'] as const).map((tab) => (
+        {(['beam', 'column', 'brace'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -137,7 +138,7 @@ export default function App() {
               : { color: 'var(--mc-gold-light)' }}
             className="px-4 py-2 text-sm font-medium -mb-px"
           >
-            {tab === 'beam' ? 'Steel Beam' : 'Steel Column'}
+            {tab === 'beam' ? 'Steel Beam' : tab === 'column' ? 'Steel Column' : 'Steel Brace'}
           </button>
         ))}
       </nav>
@@ -214,6 +215,12 @@ export default function App() {
 
       <ColumnApp
         className={`flex flex-1 overflow-hidden bg-gray-50 ${activeTab === 'column' ? '' : 'hidden'}`}
+        jobNumber={jobNumber}
+        jobName={jobName}
+      />
+
+      <BraceApp
+        className={`flex flex-1 overflow-hidden bg-gray-50 ${activeTab === 'brace' ? '' : 'hidden'}`}
         jobNumber={jobNumber}
         jobName={jobName}
       />
