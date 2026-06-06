@@ -11,6 +11,7 @@ import {
   ReferenceLine,
 } from 'recharts';
 import type { BraceInputs, BraceResults } from '@/types/brace';
+import { exportBraceToPDF } from '@/utils/bracePdfExport';
 
 interface BraceResultsPanelProps {
   inputs: BraceInputs;
@@ -34,9 +35,18 @@ function utilCell(ratio: number) {
 
 const PF = (b: boolean) => (b ? 'PASS' : 'FAIL');
 
-export function BraceResultsPanel({ inputs, results }: BraceResultsPanelProps) {
+export function BraceResultsPanel({ inputs, results, jobNumber, jobName }: BraceResultsPanelProps) {
   const im = results.intermediates;
   const [showCalc, setShowCalc] = useState(false);
+
+  const handleExport = () => {
+    try {
+      exportBraceToPDF(inputs, results, jobNumber, jobName);
+    } catch (err) {
+      console.error('Brace PDF export failed:', err);
+      alert('PDF export failed: ' + (err instanceof Error ? err.message : String(err)));
+    }
+  };
 
   // Interaction envelopes (major axis; M*y = 0)
   const sectionEnvelope = [
@@ -300,9 +310,8 @@ export function BraceResultsPanel({ inputs, results }: BraceResultsPanelProps) {
 
       <button
         type="button"
-        disabled
-        title="PDF export wired in 6R5"
-        className="bg-blue-600 text-white px-4 py-2 rounded mc-btn-primary opacity-50 cursor-not-allowed"
+        onClick={handleExport}
+        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded mc-btn-primary"
       >
         Export PDF Report
       </button>
