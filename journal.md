@@ -697,3 +697,13 @@ regress clean.
 ### Pushed to remote
 2026-06-06 — all eight Rev 6 commits pushed to `origin/main` (`4d2181f..97e1418`,
 github.com/socool75sdai-lang/steel-beam-tool). Working tree clean.
+
+---
+
+## 2026-06-07 — Rev 6 Docx Updated
+
+Updated `.Improvements/Rev 6/Claude REV 6.docx` to include the Rev 6 orchestration prompt:
+"Handover read document, design orchestration. Use existing kanban to lodge and track progress.
+Include a critic and validator subagent role to confirm the issues were resolved in addition to
+your requirements. Update the journal file and save the plan to the project directory. Do not
+execute the plan in this context." Committed and pushed to `origin/main`.
